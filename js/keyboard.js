@@ -12,7 +12,9 @@ Vue.component(
 			octaves: {
 				type: Number,
 				default: 3
-			}
+			},
+			onHandler: Function,
+			offHandler: Function
 		},
 		methods: {
 			serialize: function(){
@@ -35,6 +37,8 @@ Vue.component(
 				>
 				<keyboard-octave
 					v-for="index in octaves"
+					:onHandler="onHandler"
+					:offHandler="offHandler"
 					:holding="holding"
 					:octave="index"
 					/>
@@ -70,7 +74,9 @@ Vue.component(
 			octave: {
 				type: Number,
 				default: 0
-			}
+			},
+			onHandler: Function,
+			offHandler: Function
 		},
 		created: function(){
 			this.keys = keys;
@@ -85,6 +91,8 @@ Vue.component(
 						:index="keys.data[key].index"
 						:octave="octave"
 						:holding="holding"
+						:onHandler="onHandler"
+						:offHandler="offHandler"
 						/>
 					<keyboard-key-black
 						v-for="key in keys.black"
@@ -93,6 +101,8 @@ Vue.component(
 						:index="keys.data[key].index"
 						:octave="octave"
 						:holding="holding"
+						:onHandler="onHandler"
+						:offHandler="offHandler"
 						/>
 				</svg>
 			</div>
@@ -103,6 +113,8 @@ Vue.component(
 
 let mixinKeyboardKeyProps = {
 	props: {
+		offHandler: Function,
+		onHandler: Function,
 		holding: Boolean,
 		octave: Number,
 		index: Number,
@@ -122,6 +134,8 @@ Vue.component(
 				:index="index"
 				:octave="octave"
 				:holding="holding"
+				:onHandler="onHandler"
+				:offHandler="offHandler"
 				class="keyboard-key-white"
 				width="23"
 				height="120"
@@ -141,6 +155,8 @@ Vue.component(
 				:index="index"
 				:octave="octave"
 				:holding="holding"
+				:onHandler="onHandler"
+				:offHandler="offHandler"
 				class="keyboard-key-black"
 				width="13"
 				height="80"
@@ -160,19 +176,28 @@ Vue.component(
 			};
 		},
 		methods: {
+			absoluteIndex: function(){
+				return this.octave * 12 + this.index;
+			},
 			serialize: function(){
-				return `${this.name} ${this.octave} : ${this.octave * 12 + this.index}`;
+				return `${this.name} ${this.octave}`;
 			},
 			on: function (event) {
 				if(this.holding || event.type === 'mousedown' ) {
 					console.log(this.serialize() + ' on');
 					this.active = true;
+					if(this.onHandler){
+						this.onHandler(this.absoluteIndex());
+					}
 				}
 			},
 			off: function () {
 				if(this.holding){
 					console.log(this.serialize() + ' off');
 					this.active = false;
+					if(this.offHandler){
+						this.offHandler(this.absoluteIndex());
+					}
 				}
 			}
 		},
