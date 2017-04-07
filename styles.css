@@ -1,0 +1,67 @@
+html, body{
+	height: 100%;
+}
+* {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	vertical-align: inherit;
+	font-size: inherit;
+	line-height: inherit;
+	font-weight: inherit;
+	font-style: inherit;
+	font-family: inherit;
+	text-align: inherit;
+	text-decoration: inherit;
+	color: inherit;
+	background-color: transparent;
+}
+html{
+	font-size: 16px;
+	-webkit-text-size-adjust: 100%;
+}
+body{
+	background-color: #000;
+	font-size: 1rem;
+	line-height: 1.5rem;
+	font-weight: 400;
+	font-style: normal;
+	vertical-align: top;
+	font-family: 'Exo 2', sans-serif;
+	text-align: left;
+	text-decoration: none;
+	color: #ccc;
+}
+
+.noSelect {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.keyboard{
+	display: flex;
+}
+.keyboard-octave {
+	display: block;
+	flex-grow: 1;
+	height: auto;
+}
+.keyboard-key{
+	stroke-linejoin: round;
+}
+.keyboard-key-white{
+	fill: white;
+	stroke: black;
+}
+.keyboard-key-black{
+	fill: black;
+	stroke: black;
+}
+.keyboard-key.active{
+	fill: #888;
+}
