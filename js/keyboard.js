@@ -37,6 +37,7 @@ Vue.component(
 				>
 				<keyboard-octave
 					v-for="index in octaves"
+					:key="index"
 					:onHandler="onHandler"
 					:offHandler="offHandler"
 					:holding="holding"
@@ -86,6 +87,7 @@ Vue.component(
 				<svg viewBox="0 0 161 120">
 					<keyboard-key-white
 						v-for="(key, index) in keys.white"
+						:key="keys.data[key].index"
 						:x="23 * index"
 						:name="keys.data[key].name"
 						:index="keys.data[key].index"
@@ -96,6 +98,7 @@ Vue.component(
 						/>
 					<keyboard-key-black
 						v-for="key in keys.black"
+						:key="keys.data[key].index"
 						:x="keys.data[key].x"
 						:name="keys.data[key].name"
 						:index="keys.data[key].index"
