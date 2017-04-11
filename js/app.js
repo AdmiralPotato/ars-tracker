@@ -4,21 +4,49 @@ let ac = window.AudioContext || window.webkitAudioContext;
 if(!ac){
 	alert('Your browser cannot.');
 }
+let audioContext = new ac();
+let audioAnalyser = audioContext.createAnalyser();
+let audioGain = audioContext.createGain();
+audioGain.connect(audioContext.destination);
+audioGain.connect(audioAnalyser);
+
 let audio = {
 	SAMPLES_PER_FRAME: 800,
+	SAMPLES_FOR_OVERLAP: 80,
 	BASE_NOTE: 57,
 	BASE_FREQ: 440,
 	apu: new ET209(),
 	frames: [],
-	context: new ac(),
+	context: audioContext,
+	analyser: audioAnalyser,
+	gain: audioGain,
 	minPlayTime: 0,
+	lastBuffer: null,
 	generate_one_frame: function() {
 		let a = audio;
-		let buffer = a.context.createBuffer(1, a.SAMPLES_PER_FRAME, ET209.SAMPLE_RATE);
+		let buffer = a.context.createBuffer(
+			1,
+			a.SAMPLES_PER_FRAME + a.SAMPLES_FOR_OVERLAP,
+			ET209.SAMPLE_RATE
+		);
+		let data = buffer.getChannelData(0);
+		a.apu.generate_array(data, a.SAMPLES_PER_FRAME);
+		if(a.lastBuffer !== null){
+			let dataLast = a.lastBuffer.getChannelData(0);
+			for (let i = 0; i < a.SAMPLES_FOR_OVERLAP; i++) {
+				let sample = data[i] * (1 - (i / a.SAMPLES_FOR_OVERLAP));
+				data[i] *= i / a.SAMPLES_FOR_OVERLAP;
+				dataLast[a.SAMPLES_PER_FRAME + i] = sample;
+			}
+			a.playBuffer(a.lastBuffer);
+		}
+		a.lastBuffer = buffer;
+	},
+	playBuffer: function(buffer){
+		let a = audio;
 		let bufferSourceNode = a.context.createBufferSource();
-		a.apu.generate_buffer(buffer);
 		bufferSourceNode.buffer = buffer;
-		bufferSourceNode.connect(a.context.destination);
+		bufferSourceNode.connect(a.gain);
 		let time = a.context.currentTime;
 		let whenToPlay = a.minPlayTime < time ? time : a.minPlayTime;
 		bufferSourceNode.start(whenToPlay);
@@ -52,6 +80,9 @@ setInterval(
 
 let app = new Vue({
 	el: '#appTarget',
+	created: function(){
+		this.audio = audio;
+	},
 	methods: {
 		on: function(index){
 			audio.handleKeyOn(index);
@@ -63,6 +94,7 @@ let app = new Vue({
 	template: `
 		<div>
 			<h1>ARS-Tracker</h1>
+			<vue-oscilloscope :analyser="audio.analyser" />
 			<keyboard :octaves="5" :onHandler="on" :offHandler="off"/>
 		</div>
 	`

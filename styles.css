@@ -65,3 +65,13 @@ body{
 .keyboard-key.active{
 	fill: #888;
 }
+
+.vue-oscilloscope{
+	height: 12rem;
+}
+
+.vue-canvas{
+	display: block;
+	height: 100%;
+	width: 100%;
+}
