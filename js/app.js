@@ -10,6 +10,17 @@ let audioGain = audioContext.createGain();
 audioGain.connect(audioContext.destination);
 audioGain.connect(audioAnalyser);
 
+let arrayRemove = function(array, item){
+	let index = array.indexOf(item);
+	if(index !== -1){
+		array.splice(index, 1);
+	}
+	return array;
+};
+let getLastValueInArray = function (array) {
+	return array[array.length -1];
+};
+
 let audio = {
 	SAMPLES_PER_FRAME: 800,
 	SAMPLES_FOR_OVERLAP: 80,
@@ -55,17 +66,27 @@ let audio = {
 	keyIndexToFreq: function(index){
 		return Math.floor(audio.BASE_FREQ * Math.pow(2,(index-audio.BASE_NOTE)/12) * 65536 / ET209.SAMPLE_RATE + 0.5) - 1;
 	},
-	handleKeyOn: function(index){
+	handleKeyOn: function(keyIndex, resume){
 		let a = audio;
-		let freq = a.keyIndexToFreq(index);
+		let freq = a.keyIndexToFreq(keyIndex);
+		if(!resume){
+			a.onKeys.push(keyIndex);
+		}
 		a.apu.write_voice_rate(0, freq);
 		a.apu.write_voice_waveform(0, ET209.WAVEFORM_TOGGLE_INVERT_ON_CARRY_FLAG);
 		a.apu.write_voice_volume(0, ET209.VOLUME_RESET_FLAG | 64);
 	},
-	handleKeyOff: function(){
+	handleKeyOff: function(keyIndex){
 		let a = audio;
-		a.apu.write_voice_volume(0, ET209.VOLUME_RESET_FLAG);
-	}
+		let lastPlayedKey = getLastValueInArray(a.onKeys);
+		arrayRemove(a.onKeys, keyIndex);
+		if(a.onKeys.length < 1){
+			a.apu.write_voice_volume(0, ET209.VOLUME_RESET_FLAG);
+		} else if(keyIndex === lastPlayedKey){
+			a.handleKeyOn(getLastValueInArray(a.onKeys), true);
+		}
+	},
+	onKeys: []
 };
 
 setInterval(
@@ -80,6 +101,11 @@ setInterval(
 
 let app = new Vue({
 	el: '#appTarget',
+	data:function () {
+		return {
+			onKeys: audio.onKeys
+		}
+	},
 	created: function(){
 		this.audio = audio;
 	},
@@ -95,7 +121,7 @@ let app = new Vue({
 		<div>
 			<h1>ARS-Tracker</h1>
 			<vue-oscilloscope :analyser="audio.analyser" />
-			<keyboard :octaves="5" :onHandler="on" :offHandler="off"/>
+			<keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="onKeys" />
 		</div>
 	`
 });

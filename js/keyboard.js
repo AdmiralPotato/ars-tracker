@@ -14,7 +14,8 @@ Vue.component(
 				default: 3
 			},
 			onHandler: Function,
-			offHandler: Function
+			offHandler: Function,
+			onKeys: Array
 		},
 		methods: {
 			serialize: function(){
@@ -41,6 +42,7 @@ Vue.component(
 					:onHandler="onHandler"
 					:offHandler="offHandler"
 					:holding="holding"
+					:onKeys="onKeys"
 					:octave="index"
 					/>
 			</div>
@@ -77,10 +79,19 @@ Vue.component(
 				default: 0
 			},
 			onHandler: Function,
-			offHandler: Function
+			offHandler: Function,
+			onKeys: Array
 		},
 		created: function(){
 			this.keys = keys;
+		},
+		methods: {
+			absoluteIndex: function(index){
+				return this.octave * 12 + index;
+			},
+			isOn: function(absoluteIndex){
+				return this.onKeys.indexOf(absoluteIndex) !== -1;
+			}
 		},
 		template: `
 			<div class="keyboard-octave">
@@ -91,21 +102,24 @@ Vue.component(
 						:x="23 * index"
 						:name="keys.data[key].name"
 						:index="keys.data[key].index"
+						:isOn="isOn(absoluteIndex(keys.data[key].index))"
 						:octave="octave"
 						:holding="holding"
 						:onHandler="onHandler"
 						:offHandler="offHandler"
+						:absoluteIndex="absoluteIndex(keys.data[key].index)"
 						/>
 					<keyboard-key-black
 						v-for="key in keys.black"
 						:key="keys.data[key].index"
 						:x="keys.data[key].x"
 						:name="keys.data[key].name"
-						:index="keys.data[key].index"
+						:isOn="isOn(absoluteIndex(keys.data[key].index))"
 						:octave="octave"
 						:holding="holding"
 						:onHandler="onHandler"
 						:offHandler="offHandler"
+						:absoluteIndex="absoluteIndex(keys.data[key].index)"
 						/>
 				</svg>
 			</div>
@@ -116,11 +130,12 @@ Vue.component(
 
 let mixinKeyboardKeyProps = {
 	props: {
+		absoluteIndex: Number,
 		offHandler: Function,
 		onHandler: Function,
 		holding: Boolean,
 		octave: Number,
-		index: Number,
+		isOn: Boolean,
 		name: String,
 		x: Number
 	}
@@ -133,12 +148,13 @@ Vue.component(
 		template: `
 			<keyboard-key
 				:x="x"
+				:isOn="isOn"
 				:name="name"
-				:index="index"
 				:octave="octave"
 				:holding="holding"
 				:onHandler="onHandler"
 				:offHandler="offHandler"
+				:absoluteIndex="absoluteIndex"
 				class="keyboard-key-white"
 				width="23"
 				height="120"
@@ -154,12 +170,13 @@ Vue.component(
 		template: `
 			<keyboard-key
 				:x="x"
+				:isOn="isOn"
 				:name="name"
-				:index="index"
 				:octave="octave"
 				:holding="holding"
 				:onHandler="onHandler"
 				:offHandler="offHandler"
+				:absoluteIndex="absoluteIndex"
 				class="keyboard-key-black"
 				width="13"
 				height="80"
@@ -173,15 +190,16 @@ Vue.component(
 	'keyboard-key',
 	{
 		mixins: [mixinKeyboardKeyProps],
+		props: {
+			absoluteIndex: Number,
+			isOn: Boolean
+		},
 		data: function(){
 			return {
 				active: false
 			};
 		},
 		methods: {
-			absoluteIndex: function(){
-				return this.octave * 12 + this.index;
-			},
 			serialize: function(){
 				return `${this.name} ${this.octave}`;
 			},
@@ -190,7 +208,7 @@ Vue.component(
 					console.log(this.serialize() + ' on');
 					this.active = true;
 					if(this.onHandler){
-						this.onHandler(this.absoluteIndex());
+						this.onHandler(this.absoluteIndex);
 					}
 				}
 			},
@@ -199,7 +217,7 @@ Vue.component(
 					console.log(this.serialize() + ' off');
 					this.active = false;
 					if(this.offHandler){
-						this.offHandler(this.absoluteIndex());
+						this.offHandler(this.absoluteIndex);
 					}
 				}
 			}
@@ -207,7 +225,7 @@ Vue.component(
 		template: `
 			<rect
 				class="keyboard-key noSelect"
-				:class="{active: active}"
+				:class="{active: isOn || active}"
 				v-on:mousedown="on"
 				v-on:mouseenter="on"
 				v-on:mouseup="off"
