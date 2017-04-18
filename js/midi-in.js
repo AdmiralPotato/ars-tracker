@@ -1,8 +1,8 @@
 let noteOff = function( noteNumber ){
-	audio.handleKeyOff(noteNumber);
+	app.handleKeyOff(noteNumber);
 };
 let noteOn = function( noteNumber, velocity){
-	audio.handleKeyOn(noteNumber);
+	app.handleKeyOn(noteNumber);
 };
 let controller = function( noteNumber, velocity){};
 let pitchWheel = function( pitch ){};

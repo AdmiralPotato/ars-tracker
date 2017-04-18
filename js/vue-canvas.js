@@ -24,7 +24,6 @@ Vue.component(
 				}
 				let serialized = t.serializeWrap();
 				if(t.lastSerializedValue !== serialized){
-					console.log('rendering');
 					t.update(t.context, t.width, t.height, time);
 					t.lastSerializedValue = serialized;
 				}
