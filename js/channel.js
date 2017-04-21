@@ -101,5 +101,3 @@ Channel.prototype = {
 let channels = [0,1,2,3,4,5,6].map(function (index) {
 	return new Channel(index);
 });
-
-channels[0].setActiveInstrument(new Instrument("10 15 14 13 12 11 | / 10 9 8 8 7 7 6 6 5 5 5 4 4 4 4 3 3 3 3 3 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 0", '', '', "32"));

@@ -13,21 +13,56 @@ let getLastValueInArray = function (array) {
 
 let app = {
 	onKeys: [],
-	handleKeyOn: function(keyIndex, resume){
-		let channel = channels[0];
-		if(!resume){
-			app.onKeys.push(keyIndex);
-		}
-		channel.noteOn(keyIndex);
+	polyphony: [{},{},{},{},{},{},{}],
+	activeInstrument: new Instrument("10 15 14 13 12 11 | / 10 9 8 8 7 7 6 6 5 5 5 4 4 4 4 3 3 3 3 3 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 0", '', '', "32"),
+	handleKeyOn: function(keyIndex){
+		let channelIndex = app.getNextAvailableChannelIndex();
+		let polyphonyNote = app.polyphony[channelIndex];
+		polyphonyNote.noteIndex = keyIndex;
+		polyphonyNote.startTime = Date.now;
+		app.onKeys.push(keyIndex);
+		channels[channelIndex].setActiveInstrument(app.activeInstrument);
+		channels[channelIndex].noteOn(keyIndex);
+	},
+	getNextAvailableChannelIndex: function () {
+		let oldestSilentChannel = null;
+		let oldestSilentChannelTime = null;
+		let oldestActiveChannel = null;
+		let oldestActiveChannelTime = null;
+		app.polyphony.forEach(function (polyphonyNote, index) {
+			if(!polyphonyNote.noteIndex){
+				let isOnlyOrOldest = (
+					oldestSilentChannelTime === null ||
+					polyphonyNote.startTime < oldestSilentChannelTime
+				);
+				if(isOnlyOrOldest){
+					oldestSilentChannel = index;
+					oldestSilentChannelTime = polyphonyNote.startTime;
+				}
+			} else if(
+				oldestActiveChannelTime === null ||
+				polyphonyNote.startTime < oldestActiveChannelTime
+			){
+				oldestActiveChannel = index;
+				oldestActiveChannelTime = polyphonyNote.startTime;
+			}
+		});
+		let targetChannelIndex = oldestSilentChannelTime !== null ? oldestSilentChannel : oldestActiveChannel;
+		return targetChannelIndex;
 	},
 	handleKeyOff: function(keyIndex){
-		let channel = channels[0];
-		let lastPlayedKey = getLastValueInArray(app.onKeys);
 		arrayRemove(app.onKeys, keyIndex);
-		if(app.onKeys.length < 1){
-			channel.noteOff();
-		} else if(keyIndex === lastPlayedKey){
-			app.handleKeyOn(getLastValueInArray(app.onKeys), true);
+		app.removePolyphonyNodeByKeyIndex(keyIndex);
+	},
+	removePolyphonyNodeByKeyIndex: function (keyIndex) {
+		let found = false;
+		for (let i = 0; i < app.polyphony.length; i++) {
+			let polyphonyNote = app.polyphony[i];
+			if(polyphonyNote.noteIndex === keyIndex){
+				found = true;
+				channels[i].noteOff();
+				app.polyphony[i].noteIndex = null;
+			}
 		}
 	},
 	audioInterval: null,
