@@ -1,3 +1,9 @@
+html {
+	box-sizing: border-box;
+}
+*, *:before, *:after {
+	box-sizing: inherit;
+}
 html, body{
 	height: 100%;
 }
@@ -43,6 +49,11 @@ body{
 	user-select: none;
 }
 
+h1{
+	font-size: 2rem;
+	line-height: 2.5rem;
+}
+
 .keyboard{
 	display: flex;
 }
@@ -64,6 +75,41 @@ body{
 }
 .keyboard-key.active{
 	fill: #888;
+}
+
+.instrument,
+.instrument-sequence .svg-holder,
+.instrument-sequence input,
+.instrument ul li a{
+	position: relative;
+	z-index: 0;
+	display: block;
+	border: 2px solid;
+	border-radius: 4px;
+	overflow: hidden;
+	padding: 0.25rem;
+}
+.instrument-sequence svg rect{
+	fill: #888;
+	stroke: #fff;
+	stroke-width: 0.1;
+	stroke-linejoin: round;
+}
+.instrument ul{
+	display: flex;
+	overflow: hidden;
+}
+.instrument ul li{
+	position: relative;
+	z-index: 0;
+	display: block;
+	overflow: hidden;
+}
+.instrument ul li.active a{
+	background-color: #264;
+}
+.instrument ul li a{
+	cursor: pointer;
 }
 
 .vue-oscilloscope{

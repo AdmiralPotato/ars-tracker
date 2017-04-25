@@ -14,7 +14,7 @@ let getLastValueInArray = function (array) {
 let app = {
 	onKeys: [],
 	polyphony: [{},{},{},{},{},{},{}],
-	activeInstrument: new Instrument("10 15 14 13 12 11 | / 10 9 8 8 7 7 6 6 5 5 5 4 4 4 4 3 3 3 3 3 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 0", '', '', "32"),
+	activeInstrument: instruments[0],
 	handleKeyOn: function(keyIndex){
 		let channelIndex = app.getNextAvailableChannelIndex();
 		let polyphonyNote = app.polyphony[channelIndex];
@@ -109,6 +109,7 @@ app.vue = new Vue({
 		<div>
 			<h1>ARS-Tracker</h1>
 			<vue-oscilloscope :analyser="audio.analyser" />
+			<instrument :instrumentIndex="0" />
 			<keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="onKeys" />
 		</div>
 	`

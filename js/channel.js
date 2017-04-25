@@ -24,12 +24,6 @@ let Channel = function(voiceIndex){
 };
 
 Channel.prototype = {
-	instrumentSequences: [
-		'volume',
-		'arpeggio',
-		'pitch',
-		'waveform'
-	],
 	BASE_NOTE: 57,
 	BASE_FREQ: 440,
 	keyIndexToFreq: function(index){
@@ -62,7 +56,8 @@ Channel.prototype = {
 	},
 	advanceSequences: function () {
 		let channel = this;
-		this.instrumentSequences.forEach(function (sequenceName) {
+		Instrument.sequences.forEach(function (sequenceDescription) {
+			let sequenceName = sequenceDescription.name;
 			let sequence = channel.instrument[sequenceName];
 			let lastSequenceIndex = channel.phaseMap[sequenceName];
 			let sequenceIndex = sequence.advance(lastSequenceIndex, channel.noteHeld);
@@ -77,7 +72,8 @@ Channel.prototype = {
 	},
 	resetSequences: function () {
 		let channel = this;
-		this.instrumentSequences.forEach(function (sequenceName) {
+		Instrument.sequences.forEach(function (sequenceDescription) {
+			let sequenceName = sequenceDescription.name;
 			let sequence = channel.instrument[sequenceName];
 			channel.phaseMap[sequenceName] = 0;
 			channel.valueMap[sequenceName] = sequence.valueAt(0);
