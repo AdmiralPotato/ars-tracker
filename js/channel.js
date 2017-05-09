@@ -9,6 +9,7 @@ let Channel = function(voiceIndex){
 	channel.noteIndex = null;
 	channel.noteHeld = false;
 	channel.needWaveformReset = false;
+	channel.needWaveformUpdate = false;
 	channel.phaseMap = {
 		volume: null,
 		arpeggio: null,
@@ -33,6 +34,7 @@ Channel.prototype = {
 		this.noteIndex = noteIndex;
 		this.noteHeld = true;
 		this.needWaveformReset = true;
+		this.needWaveformUpdate = true;
 		this.resetSequences();
 	},
 	noteOff: function() {
@@ -63,6 +65,9 @@ Channel.prototype = {
 			let sequenceIndex = sequence.advance(lastSequenceIndex, channel.noteHeld);
 			channel.phaseMap[sequenceName] = sequenceIndex;
 			if(sequenceIndex !== null){
+				if(sequenceName === 'waveform'){
+					channel.needWaveformUpdate = true;
+				}
 				channel.valueMap[sequenceName] = sequence.valueAt(sequenceIndex);
 			}
 		});
@@ -80,17 +85,21 @@ Channel.prototype = {
 		});
 	},
 	go: function() {
-		let note = this.noteIndex + this.valueMap.arpeggio;
-		let freq = this.keyIndexToFreq(note) + this.valueMap.pitch;
-		let volume = this.isMuted ? 0 : (this.volume * this.valueMap.volume) >> 2;
-		if(this.needWaveformReset) {
+		let channel = this;
+		let note = channel.noteIndex + channel.valueMap.arpeggio;
+		let freq = channel.keyIndexToFreq(note) + channel.valueMap.pitch;
+		let volume = channel.isMuted ? 0 : (channel.volume * channel.valueMap.volume) >> 2;
+		if(channel.needWaveformReset) {
 			volume |= ET209.VOLUME_RESET_FLAG;
-			this.needWaveformReset = false;
+			channel.needWaveformReset = false;
 		}
-		audio.apu.write_voice_rate(this.voiceIndex, freq);
-		audio.apu.write_voice_waveform(this.voiceIndex, this.valueMap.waveform);
-		audio.apu.write_voice_volume(this.voiceIndex, volume);
-		this.advanceSequences();
+		audio.apu.write_voice_rate(channel.voiceIndex, freq);
+		if(channel.needWaveformUpdate){
+			audio.apu.write_voice_waveform(channel.voiceIndex, channel.valueMap.waveform);
+			channel.needWaveformUpdate = false;
+		}
+		audio.apu.write_voice_volume(channel.voiceIndex, volume);
+		channel.advanceSequences();
 	}
 };
 
