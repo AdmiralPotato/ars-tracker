@@ -49,21 +49,29 @@ Vue.component(
 			sequence: Sequence
 		},
 		data: function(){
-			return {sequenceString: ''};
+			return {
+				sequenceString: '',
+				dirty: false
+			};
 		},
 		created: function () {
-			this.sequenceString = this.sequence.string;
+			this.getStringFromSequence();
 		},
 		methods: {
 			reparseSequence: function (submitEvent) {
 				submitEvent.preventDefault();
 				this.sequence.parse(this.sequenceString);
+				this.getStringFromSequence();
+				this.forceDirtyCheck();
+			},
+			getStringFromSequence: function () {
+				this.sequenceString = this.sequence.string;
+			},
+			forceDirtyCheck: function() {
+				this.dirty = this.sequenceString !== this.sequence.string;
 			}
 		},
 		computed: {
-			synced: function() {
-				return this.sequenceString === this.sequence.string;
-			}
 		},
 		template: `
 			<div class="instrument-sequence">
@@ -80,8 +88,8 @@ Vue.component(
 					</svg>
 				</div>
 				<form v-on:submit="reparseSequence">
-					<input type="text" size="60" v-model="sequenceString" />
-					<span v-if="!synced">*</span>
+					<input type="text" size="60" v-model="sequenceString" v-on:input="forceDirtyCheck" />
+					<span v-if="dirty">*</span>
 				</form>
 			</div>
 		`
