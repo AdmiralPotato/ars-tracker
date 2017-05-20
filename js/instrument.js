@@ -1,17 +1,19 @@
 "use strict";
 
-let Instrument = function(volume, arpeggio, pitch, waveform){
-	this.volume = new Sequence(volume || '| / 15');
-	this.arpeggio = new Sequence(arpeggio || '0');
-	this.pitch = new Sequence(pitch || '0');
-	this.waveform = new Sequence(waveform || '0');
+let Instrument = function(argsObject){
+	let args = argsObject || {};
+	this.name = args.name || 'Instrument '+ instruments.length;
+	this.volume = new Sequence(args.volume || '| / 15');
+	this.arpeggio = new Sequence(args.arpeggio || '0');
+	this.pitch = new Sequence(args.pitch || '0');
+	this.waveform = new Sequence(args.waveform || '48');
 };
 
 Instrument.sequences = [
 	{name: 'volume',   min: 0,    max:15},
 	{name: 'arpeggio', min: -120, max:120},
 	{name: 'pitch',    min: -128, max:127},
-	{name: 'waveform', min: 0,    max:63}
+	{name: 'waveform', min: 0,    max:255}
 ];
 
 let Sequence = function(sequenceString){
@@ -72,9 +74,22 @@ Sequence.prototype = {
 	}
 };
 
-let defaultInstrument = new Instrument();
+let defaultInstrument = new Instrument({
+	name: 'defaultInstrument',
+	volume: '10 15 14 13 12 11 | / 10 9 8 8 7 7 6 6 5 5 5 4 4 4 4 3 3 3 3 3 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 0',
+	arpeggio: '0',
+	pitch: '0',
+	waveform: '32'
+});
+let noiseInstrument = new Instrument({
+	name: 'noiseInstrument',
+	volume: '| / 9 6 3 0',
+	arpeggio: '0',
+	pitch: '0',
+	waveform: '0'
+});
 
 let instruments = [
-	new Instrument("10 15 14 13 12 11 | / 10 9 8 8 7 7 6 6 5 5 5 4 4 4 4 3 3 3 3 3 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 0", '', '', "32"),
-	defaultInstrument
+	defaultInstrument,
+	noiseInstrument
 ];

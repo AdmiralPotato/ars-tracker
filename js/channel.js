@@ -1,10 +1,12 @@
 "use strict";
 
-let Channel = function(voiceIndex){
+let Channel = function(voiceIndex, isNoise){
 	let channel = this;
 	channel.voiceIndex = voiceIndex;
+	channel.isNoise = isNoise;
 	channel.instrument = defaultInstrument;
 	channel.volume = 15;
+	channel.displayVolume = 0;
 	channel.isMuted = false;
 	channel.noteIndex = null;
 	channel.noteHeld = false;
@@ -85,6 +87,13 @@ Channel.prototype = {
 		});
 	},
 	go: function() {
+		if(this.isNoise){
+			this.goNoise();
+		} else {
+			this.goVoice();
+		}
+	},
+	goVoice: function() {
 		let channel = this;
 		let note = channel.noteIndex + channel.valueMap.arpeggio;
 		let freq = channel.keyIndexToFreq(note) + channel.valueMap.pitch;
@@ -99,10 +108,28 @@ Channel.prototype = {
 			channel.needWaveformUpdate = false;
 		}
 		audio.apu.write_voice_volume(channel.voiceIndex, volume);
+		channel.displayVolume = volume;
+		channel.advanceSequences();
+	},
+	goNoise: function() {
+		let channel = this;
+		let volume = channel.isMuted ? 0 : (channel.volume * channel.valueMap.volume) >> 2;
+		if(channel.needWaveformReset) {
+			volume |= ET209.VOLUME_RESET_FLAG;
+			channel.needWaveformReset = false;
+		}
+		audio.apu.write_noise_period(channel.noteIndex);
+		if(channel.needWaveformUpdate){
+			audio.apu.write_noise_waveform(channel.valueMap.waveform);
+			channel.needWaveformUpdate = false;
+		}
+		audio.apu.write_noise_volume(volume);
 		channel.advanceSequences();
 	}
 };
 
-let channels = [0,1,2,3,4,5,6].map(function (index) {
-	return new Channel(index);
+let channels = [0,1,2,3,4,5,6,7].map(function (index) {
+	let channelIndex = index;
+	let isNoise = channelIndex === 7;
+	return new Channel(channelIndex, isNoise);
 });

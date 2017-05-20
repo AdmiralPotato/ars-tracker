@@ -1,29 +1,73 @@
 "use strict";
 
 Vue.component(
-	'instrument',
+	'instrument-list',
 	{
+		props: {
+			activeInstrument: Instrument,
+			change: Function
+		},
+		data: function () {
+			return {
+				instruments: instruments
+			};
+		},
+		methods: {
+			addInstrument: function () {
+				instruments.push(new Instrument());
+			},
+			deleteInstrument: function () {
+				arrayRemove(instruments, this.activeInstrument);
+			}
+		},
+		template: `
+			<div class="instrument-list">
+				<ul class="tab-list noSelect">
+					<li
+						v-for="(item, index) in instruments"
+						:class="{active: item === activeInstrument}"
+						>
+						<a @click="change(index)">{{index}}:{{item.name}}</a>
+					</li>
+				</ul>
+				<ul class="tab-list noSelect">
+					<li><a @click="addInstrument">Add</a></li>
+					<li><a @click="deleteInstrument">Delete</a></li>
+				</ul>
+			</div>
+		`
+	}
+);
+
+Vue.component(
+	'instrument-editor',
+	{
+		props: {
+			activeInstrument: Instrument
+		},
 		data: function () {
 			return {
 				activeSequenceDescription: Instrument.sequences[0]
 			}
 		},
-		props: {
-			instrumentIndex: Number
-		},
 		created: function () {
 			this.tabs = Instrument.sequences;
-			this.instrument = instruments[this.instrumentIndex];
 			this.changeTab(this.activeSequenceDescription);
+		},
+		beforeUpdate: function () {
+			this.activeSequence = this.activeInstrument[this.activeSequenceDescription.name];
 		},
 		methods: {
 			changeTab: function(sequenceDescription){
 				this.activeSequenceDescription = sequenceDescription;
-				this.activeSequence = this.instrument[this.activeSequenceDescription.name];
+				this.activeSequence = this.activeInstrument[this.activeSequenceDescription.name];
 			}
 		},
 		template: `
-			<div class="instrument">
+			<div class="instrument-editor">
+				<form>
+					<input type="text" size="60" v-model="activeInstrument.name" />
+				</form>
 				<ul class="tab-list noSelect">
 					<li v-for="item in tabs" :class="{active: activeSequenceDescription.name === item.name}"><a @click="changeTab(item)">{{item.name}}</a></li>
 				</ul>

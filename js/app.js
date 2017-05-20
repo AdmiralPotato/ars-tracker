@@ -12,38 +12,47 @@ let getLastValueInArray = function (array) {
 };
 
 let app = {
-	onKeys: [],
-	polyphony: [{},{},{},{},{},{},{}],
-	activeInstrument: instruments[0],
+	editorState: {
+		onKeys: [],
+		activeInstrument: instruments[0],
+		activeChannels: [0, 1, 2],
+		polyphony: [{}, {}, {}, {}, {}, {}, {}, {}]
+	},
 	handleKeyOn: function(keyIndex){
 		let channelIndex = app.getNextAvailableChannelIndex();
-		let polyphonyNote = app.polyphony[channelIndex];
-		polyphonyNote.noteIndex = keyIndex;
-		polyphonyNote.startTime = Date.now;
-		app.onKeys.push(keyIndex);
-		channels[channelIndex].setActiveInstrument(app.activeInstrument);
-		channels[channelIndex].noteOn(keyIndex);
+		if(channelIndex !== null){
+			let polyphonyNote = app.editorState.polyphony[channelIndex];
+			let instrument = app.editorState.activeInstrument;
+			polyphonyNote.noteIndex = keyIndex;
+			polyphonyNote.startTime = Date.now;
+			app.editorState.onKeys.push(keyIndex);
+			channels[channelIndex].setActiveInstrument(instrument);
+			channels[channelIndex].noteOn(keyIndex);
+		}
 	},
 	getNextAvailableChannelIndex: function () {
 		let oldestSilentChannel = null;
 		let oldestSilentChannelTime = null;
 		let oldestActiveChannel = null;
 		let oldestActiveChannelTime = null;
-		app.polyphony.forEach(function (polyphonyNote, index) {
+		let activeChannels = app.editorState.activeChannels;
+		let polyphony = app.editorState.polyphony;
+		activeChannels.forEach(function (channelIndex) {
+			let polyphonyNote = polyphony[channelIndex];
 			if(!polyphonyNote.noteIndex){
 				let isOnlyOrOldest = (
 					oldestSilentChannelTime === null ||
 					polyphonyNote.startTime < oldestSilentChannelTime
 				);
 				if(isOnlyOrOldest){
-					oldestSilentChannel = index;
+					oldestSilentChannel = channelIndex;
 					oldestSilentChannelTime = polyphonyNote.startTime;
 				}
 			} else if(
 				oldestActiveChannelTime === null ||
 				polyphonyNote.startTime < oldestActiveChannelTime
 			){
-				oldestActiveChannel = index;
+				oldestActiveChannel = channelIndex;
 				oldestActiveChannelTime = polyphonyNote.startTime;
 			}
 		});
@@ -51,17 +60,18 @@ let app = {
 		return targetChannelIndex;
 	},
 	handleKeyOff: function(keyIndex){
-		arrayRemove(app.onKeys, keyIndex);
+		arrayRemove(app.editorState.onKeys, keyIndex);
 		app.removePolyphonyNodeByKeyIndex(keyIndex);
 	},
 	removePolyphonyNodeByKeyIndex: function (keyIndex) {
 		let found = false;
-		for (let i = 0; i < app.polyphony.length; i++) {
-			let polyphonyNote = app.polyphony[i];
+		let polyphony = app.editorState.polyphony;
+		for (let i = 0; i < polyphony.length; i++) {
+			let polyphonyNote = polyphony[i];
 			if(polyphonyNote.noteIndex === keyIndex){
 				found = true;
 				channels[i].noteOff();
-				app.polyphony[i].noteIndex = null;
+				polyphony[i].noteIndex = null;
 			}
 		}
 	},
@@ -91,7 +101,8 @@ app.vue = new Vue({
 	el: '#appTarget',
 	data:function () {
 		return {
-			onKeys: app.onKeys
+			editorState: app.editorState,
+			channels: channels
 		}
 	},
 	created: function(){
@@ -104,13 +115,27 @@ app.vue = new Vue({
 		off: function(index){
 			app.handleKeyOff(index);
 		},
+		changeInstrument: function (instrumentIndex) {
+			app.editorState.activeInstrument = instruments[instrumentIndex];
+		},
+		toggleChannel: function (channelIndex) {
+			let activeChannels = app.editorState.activeChannels;
+			let alreadyThere = activeChannels.indexOf(channelIndex) !== -1;
+			if(alreadyThere){
+				arrayRemove(activeChannels, channelIndex);
+			} else {
+				activeChannels.push(channelIndex);
+			}
+		}
 	},
 	template: `
 		<div>
 			<h1>ARS-Tracker</h1>
 			<vue-oscilloscope :analyser="audio.analyser" />
-			<instrument :instrumentIndex="0" />
-			<keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="onKeys" />
+			<instrument-list :activeInstrument="editorState.activeInstrument" :change="changeInstrument" />
+			<instrument-editor :activeInstrument="editorState.activeInstrument" :key="editorState.activeInstrument.name" />
+			<keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="editorState.onKeys" />
+			<channel-list :channels="channels" :activeChannels="editorState.activeChannels" :toggleChannel="toggleChannel" />
 		</div>
 	`
 });
