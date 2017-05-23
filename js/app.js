@@ -131,11 +131,11 @@ app.vue = new Vue({
 	template: `
 		<div>
 			<h1>ARS-Tracker</h1>
-			<vue-oscilloscope :analyser="audio.analyser" />
-			<instrument-list :activeInstrument="editorState.activeInstrument" :change="changeInstrument" />
-			<instrument-editor :activeInstrument="editorState.activeInstrument" :key="editorState.activeInstrument.name" />
-			<keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="editorState.onKeys" />
-			<channel-list :channels="channels" :activeChannels="editorState.activeChannels" :toggleChannel="toggleChannel" />
+			<collapse :openByDefault="false" name="oscilloscope"><vue-oscilloscope :analyser="audio.analyser" /></collapse>
+			<collapse :openByDefault="false" name="instrument list / editor"><instrument-list :activeInstrument="editorState.activeInstrument" :change="changeInstrument" /></collapse>
+			<collapse :openByDefault="false" name="instrument editor"><instrument-editor :activeInstrument="editorState.activeInstrument" :key="editorState.activeInstrument.name" /></collapse>
+			<collapse :openByDefault="true" name="keyboard"><keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="editorState.onKeys" /></collapse>
+			<collapse :openByDefault="true" name="channel list"><channel-list :channels="channels" :activeChannels="editorState.activeChannels" :toggleChannel="toggleChannel" /></collapse>
 		</div>
 	`
 });
