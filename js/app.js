@@ -18,6 +18,9 @@ let app = {
 		activeChannels: [0, 1, 2],
 		polyphony: [{}, {}, {}, {}, {}, {}, {}, {}]
 	},
+	projectState: {
+		instruments: instruments
+	},
 	handleKeyOn: function(keyIndex){
 		let channelIndex = app.getNextAvailableChannelIndex();
 		if(channelIndex !== null){
@@ -92,10 +95,28 @@ let app = {
 	stopAudio: function () {
 		clearInterval(this.audioInterval);
 		this.audioInterval = null;
+	},
+	loadProject: function (projectAddress) {
+		let request = new XMLHttpRequest();
+		request.responseType = 'json';
+		request.addEventListener('load', function () {
+			app.hydrate(request.response);
+		});
+		request.open('get', projectAddress, true);
+		request.send();
+	},
+	hydrate: function (loadedState) {
+		instruments.length = 0;
+		loadedState.instruments.forEach(function (instrumentData) {
+			let instrument = new Instrument(instrumentData);
+			instruments.push(instrument);
+		});
+		app.editorState.activeInstrument = instruments[0];
 	}
 };
 
 app.startAudio();
+app.loadProject('https://gist.githubusercontent.com/SolraBizna/c64007be2249a43eda2af47c2736a5df/raw/e6d04f90970f66c432597ed622f0fb2ae7c526bb/HuntWork.json');
 
 app.vue = new Vue({
 	el: '#appTarget',
