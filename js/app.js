@@ -16,10 +16,16 @@ let app = {
 		onKeys: [],
 		activeInstrument: instruments[0],
 		activeChannels: [0, 1, 2],
-		polyphony: [{}, {}, {}, {}, {}, {}, {}, {}]
+		polyphony: [{}, {}, {}, {}, {}, {}, {}, {}],
+		activeSongIndex: 0,
+		activeOrderIndex: 0
 	},
 	projectState: {
-		instruments: instruments
+		instruments: instruments,
+		songs: [{
+			orders: [[0,0,0,0,0,0,0,0]],
+			patterns: [[[{}]],[[{}]],[[{}]],[[{}]],[[{}]],[[{}]],[[{}]],[[{}]]]
+		}]
 	},
 	handleKeyOn: function(keyIndex){
 		let channelIndex = app.getNextAvailableChannelIndex();
@@ -106,23 +112,66 @@ let app = {
 		request.send();
 	},
 	hydrate: function (loadedState) {
+		//instruments
 		instruments.length = 0;
 		loadedState.instruments.forEach(function (instrumentData) {
 			let instrument = new Instrument(instrumentData);
 			instruments.push(instrument);
 		});
 		app.editorState.activeInstrument = instruments[0];
+
+		//de-rle the patterns
+		app.projectState.songs.length = 0;
+		loadedState.songs.forEach(function (song) {
+			song.patterns = song.patterns.map(function (channel) {
+				if(!channel.length){
+					channel.push([{repeat: song.rows}]);
+				}
+				return channel.map(function (rlePattern) {
+					return app.rleDecodePattern(rlePattern);
+				});
+			});
+			app.projectState.songs.push(song);
+		});
+	},
+	rleDecodePattern: function(inputPattern){
+		let result = [];
+		inputPattern.forEach(function(run){
+			let expandedRun = app.repeatCopy(run);
+			result.push.apply(result, expandedRun);
+		});
+		return result;
+	},
+	repeatCopy: function (source) {
+		let copies = source.repeat || 1;
+		let string = JSON.stringify(
+			source,
+			app.repeatFilter
+		);
+		let output = [];
+		while(copies-- > 0){
+			let row = JSON.parse(string);
+			row.note = row.note || null;
+			row.volume = row.volume || null;
+			row.instrument = row.instrument || null;
+			output.push(row);
+		}
+		return output;
+	},
+	repeatFilter: function (key, value) {
+		return key === 'repeat' ? undefined : value;
 	}
 };
 
 app.startAudio();
-app.loadProject('https://gist.githubusercontent.com/SolraBizna/c64007be2249a43eda2af47c2736a5df/raw/e6d04f90970f66c432597ed622f0fb2ae7c526bb/HuntWork.json');
+app.loadProject('https://gist.githubusercontent.com/AdmiralPotato/c4393a44370d9139a43dc81a3a268a03/raw/d166e6268fbc923b62916a28b9b81b89b5892dd2/HuntWork.json');
 
 app.vue = new Vue({
 	el: '#appTarget',
 	data:function () {
 		return {
 			editorState: app.editorState,
+			projectState: app.projectState,
 			channels: channels
 		}
 	},
@@ -147,6 +196,10 @@ app.vue = new Vue({
 			} else {
 				activeChannels.push(channelIndex);
 			}
+		},
+		activateOrder: function (orderIndex) {
+			console.log('updated order', orderIndex);
+			app.editorState.activeOrderIndex = orderIndex;
 		}
 	},
 	template: `
@@ -156,7 +209,24 @@ app.vue = new Vue({
 			<collapse :openByDefault="false" name="instrument list / editor"><instrument-list :activeInstrument="editorState.activeInstrument" :change="changeInstrument" /></collapse>
 			<collapse :openByDefault="false" name="instrument editor"><instrument-editor :activeInstrument="editorState.activeInstrument" :key="editorState.activeInstrument.name" /></collapse>
 			<collapse :openByDefault="true" name="keyboard"><keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="editorState.onKeys" /></collapse>
-			<collapse :openByDefault="true" name="channel list"><channel-list :channels="channels" :activeChannels="editorState.activeChannels" :toggleChannel="toggleChannel" /></collapse>
+			<collapse :openByDefault="true" name="order editor">
+				<order-editor
+					:channels="channels"
+					:orders="projectState.songs[editorState.activeSongIndex].orders"
+					:patterns="projectState.songs[editorState.activeSongIndex].patterns"
+					:activeOrderIndex="editorState.activeOrderIndex"
+					:activateOrder="activateOrder"
+					/>
+			</collapse>
+			<collapse :openByDefault="true" name="pattern editor">
+				<pattern-editor
+					:channels="channels"
+					:activeChannels="editorState.activeChannels"
+					:toggleChannel="toggleChannel"
+					:activeOrder="projectState.songs[editorState.activeSongIndex].orders[editorState.activeOrderIndex]"
+					:patterns="projectState.songs[editorState.activeSongIndex].patterns"
+					/>
+			</collapse>
 		</div>
 	`
 });

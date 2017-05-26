@@ -3,6 +3,8 @@
 let Instrument = function(argsObject){
 	let args = argsObject || {};
 	this.name = args.name || 'Instrument '+ instruments.length;
+	this.type = args.type || 'voice';
+	this.autoperiod = args.autoperiod || null;
 	this.volume = new Sequence(args.volume || '| / 15');
 	this.arpeggio = new Sequence(args.arpeggio || '0');
 	this.pitch = new Sequence(args.pitch || '0');

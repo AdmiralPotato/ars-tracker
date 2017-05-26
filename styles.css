@@ -92,6 +92,12 @@ ul.tab-list li a{
 	padding: 0.25rem;
 	margin: 2px;
 }
+th{
+	border: 2px solid;
+	border-radius: 4px;
+	padding: 0.25rem;
+	margin: 2px;
+}
 .instrument-sequence svg rect{
 	fill: #888;
 	stroke: #fff;
@@ -108,7 +114,8 @@ ul.tab-list li{
 	display: block;
 	overflow: hidden;
 }
-ul.tab-list li.active a{
+ul.tab-list li.active a,
+.order-editor .active{
 	background-color: #264;
 }
 ul.tab-list li a{
@@ -131,4 +138,8 @@ ul.tab-list li a{
 	display: block;
 	height: 100%;
 	width: 100%;
+}
+
+.channel-row-editor{
+	display: flex;
 }
