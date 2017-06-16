@@ -57,6 +57,8 @@ Vue.component(
 			activeChannels: Array,
 			toggleChannel: Function,
 			activeOrder: Array,
+			activeRowIndex: Number,
+			activateRow: Function,
 			patterns: Array
 		},
 		computed: {
@@ -91,8 +93,11 @@ Vue.component(
 						</th>
 					</thead>
 					<tbody>
-						<tr v-for="(row, rowIndex) in rows">
-							<th>rowIndex {{rowIndex}}</th>
+						<tr
+							v-for="(row, rowIndex) in rows"
+							:class="{active: rowIndex === activeRowIndex}"
+							>
+							<th @click="activateRow(rowIndex)">rowIndex {{rowIndex}}</th>
 							<td v-for="(channelRowObject, channelIndex) in row">
 								<channel-row-editor :row="channelRowObject" />
 							</td>

@@ -12,6 +12,7 @@ let Channel = function(voiceIndex, isNoise){
 	channel.noteHeld = false;
 	channel.needWaveformReset = false;
 	channel.needWaveformUpdate = false;
+	channel.isActive = false;
 	channel.phaseMap = {
 		volume: null,
 		arpeggio: null,
@@ -37,13 +38,14 @@ Channel.prototype = {
 		this.noteHeld = true;
 		this.needWaveformReset = true;
 		this.needWaveformUpdate = true;
+		this.isActive = true;
 		this.resetSequences();
 	},
 	noteOff: function() {
 		this.noteHeld = false;
 	},
 	noteCut: function() {
-		// set all the sequence indices to null
+		this.isActive = false;
 	},
 	setActiveInstrument: function(instrument) {
 		this.instrument = instrument;
@@ -87,10 +89,18 @@ Channel.prototype = {
 		});
 	},
 	go: function() {
-		if(this.isNoise){
-			this.goNoise();
+		if(this.isActive){
+			if(this.isNoise){
+				this.goNoise();
+			} else {
+				this.goVoice();
+			}
 		} else {
-			this.goVoice();
+			if(this.isNoise){
+				audio.apu.write_noise_volume(0);
+			} else {
+				audio.apu.write_voice_volume(this.voiceIndex, 0);
+			}
 		}
 	},
 	goVoice: function() {

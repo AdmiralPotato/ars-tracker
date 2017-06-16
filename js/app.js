@@ -18,12 +18,18 @@ let app = {
 		activeChannels: [0, 1, 2],
 		polyphony: [{}, {}, {}, {}, {}, {}, {}, {}],
 		activeSongIndex: 0,
-		activeOrderIndex: 0
+		activeOrderIndex: 0,
+		activeRowIndex: 0,
+		playbackState: 'paused'
 	},
 	projectState: {
 		instruments: instruments,
 		songs: [{
+			metadata: {title: 'Untitled'},
 			orders: [[0,0,0,0,0,0,0,0]],
+			speed: 6,
+			tempo: 150,
+			rows: 64,
 			patterns: [[[{}]],[[{}]],[[{}]],[[{}]],[[{}]],[[{}]],[[{}]],[[{}]]]
 		}]
 	},
@@ -92,6 +98,9 @@ let app = {
 					channels.forEach(function(channel) {
 						channel.go();
 					});
+					if(app.editorState.playbackState !== 'paused'){
+						playback.processOneFrame();
+					}
 					audio.generate_one_frame();
 				}
 			},
@@ -151,9 +160,6 @@ let app = {
 		let output = [];
 		while(copies-- > 0){
 			let row = JSON.parse(string);
-			row.note = row.note || null;
-			row.volume = row.volume || null;
-			row.instrument = row.instrument || null;
 			output.push(row);
 		}
 		return output;
@@ -164,7 +170,7 @@ let app = {
 };
 
 app.startAudio();
-app.loadProject('https://gist.githubusercontent.com/AdmiralPotato/c4393a44370d9139a43dc81a3a268a03/raw/d166e6268fbc923b62916a28b9b81b89b5892dd2/HuntWork.json');
+app.loadProject('https://gist.githubusercontent.com/AdmiralPotato/c4393a44370d9139a43dc81a3a268a03/raw/HuntWork.json');
 
 app.vue = new Vue({
 	el: '#appTarget',
@@ -198,17 +204,33 @@ app.vue = new Vue({
 			}
 		},
 		activateOrder: function (orderIndex) {
-			console.log('updated order', orderIndex);
+			console.log('activate order', orderIndex);
 			app.editorState.activeOrderIndex = orderIndex;
+			if(app.editorState.playbackState !== 'paused'){
+				app.editorState.activeRowIndex = 0;
+			}
+		},
+		activateRow: function (rowIndex) {
+			console.log('activate row', rowIndex);
+			app.editorState.activeRowIndex = rowIndex;
+		},
+		changePlaybackState: function (playbackState) {
+			console.log('change playbackState', playbackState);
+			app.editorState.playbackState = playbackState;
 		}
 	},
 	template: `
 		<div>
 			<h1>ARS-Tracker</h1>
+			<song
+				:song="projectState.songs[editorState.activeSongIndex]"
+				:playbackState="editorState.playbackState"
+				:changePlaybackState="changePlaybackState"
+				/>
 			<collapse :openByDefault="false" name="oscilloscope"><vue-oscilloscope :analyser="audio.analyser" /></collapse>
 			<collapse :openByDefault="false" name="instrument list / editor"><instrument-list :activeInstrument="editorState.activeInstrument" :change="changeInstrument" /></collapse>
 			<collapse :openByDefault="false" name="instrument editor"><instrument-editor :activeInstrument="editorState.activeInstrument" :key="editorState.activeInstrument.name" /></collapse>
-			<collapse :openByDefault="true" name="keyboard"><keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="editorState.onKeys" /></collapse>
+			<collapse :openByDefault="false" name="keyboard"><keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="editorState.onKeys" /></collapse>
 			<collapse :openByDefault="true" name="order editor">
 				<order-editor
 					:channels="channels"
@@ -224,6 +246,8 @@ app.vue = new Vue({
 					:activeChannels="editorState.activeChannels"
 					:toggleChannel="toggleChannel"
 					:activeOrder="projectState.songs[editorState.activeSongIndex].orders[editorState.activeOrderIndex]"
+					:activeRowIndex="editorState.activeRowIndex"
+					:activateRow="activateRow"
 					:patterns="projectState.songs[editorState.activeSongIndex].patterns"
 					/>
 			</collapse>
