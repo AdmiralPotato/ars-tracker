@@ -11,8 +11,8 @@ Vue.component(
 		data: function () {
 			return {
 				playbackStates: {
-					'paused': '⏸',
-					'playSong': '⏵',
+					'paused': '⏸&#xFE0E;',
+					'playSong': '⏵&#xFE0E;',
 					'loopOrder': '🔂&#xFE0E;'
 				}
 			};

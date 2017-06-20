@@ -217,6 +217,11 @@ app.vue = new Vue({
 		changePlaybackState: function (playbackState) {
 			console.log('change playbackState', playbackState);
 			app.editorState.playbackState = playbackState;
+			if(playbackState === 'paused'){
+				channels.forEach(function(channel) {
+					channel.noteCut();
+				});
+			}
 		}
 	},
 	template: `
