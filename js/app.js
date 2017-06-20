@@ -137,7 +137,13 @@ let app = {
 					channel.push([{repeat: song.rows}]);
 				}
 				return channel.map(function (rlePattern) {
-					return app.rleDecodePattern(rlePattern);
+					let rleDecodedPattern = app.rleDecodePattern(rlePattern);
+					let missingRows = song.rows - rleDecodedPattern.length;
+					while(missingRows > 0){
+						rleDecodedPattern.push({});
+						missingRows--;
+					}
+					return rleDecodedPattern;
 				});
 			});
 			app.projectState.songs.push(song);
@@ -159,8 +165,8 @@ let app = {
 		);
 		let output = [];
 		while(copies-- > 0){
-			let row = JSON.parse(string);
-			output.push(row);
+			let instruction = JSON.parse(string);
+			output.push(instruction);
 		}
 		return output;
 	},
@@ -170,7 +176,7 @@ let app = {
 };
 
 app.startAudio();
-app.loadProject('https://gist.githubusercontent.com/AdmiralPotato/c4393a44370d9139a43dc81a3a268a03/raw/HuntWork.json');
+app.loadProject('https://gist.githubusercontent.com/SolraBizna/c64007be2249a43eda2af47c2736a5df/raw/HuntWork.json');
 
 app.vue = new Vue({
 	el: '#appTarget',
@@ -254,6 +260,7 @@ app.vue = new Vue({
 					:activeRowIndex="editorState.activeRowIndex"
 					:activateRow="activateRow"
 					:patterns="projectState.songs[editorState.activeSongIndex].patterns"
+					:rowCount="projectState.songs[editorState.activeSongIndex].rows"
 					/>
 			</collapse>
 		</div>

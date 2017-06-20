@@ -11,18 +11,17 @@ Vue.component(
 			activateOrder: Function
 		},
 		computed: {
-			rows: function () {
-				let rows = [];
-				let patterns = this.patterns;
+			tableRows: function () {
+				let orders = [];
 				this.orders.forEach(function (order, rowIndex) {
 					order.forEach(function (channelPatternIndex, channelIndex) {
-						if(!rows[rowIndex]){
-							rows[rowIndex] = [];
+						if(!orders[rowIndex]){
+							orders[rowIndex] = [];
 						}
-						rows[rowIndex][channelIndex] = channelPatternIndex;
+						orders[rowIndex][channelIndex] = channelPatternIndex;
 					});
 				});
-				return rows;
+				return orders;
 			}
 		},
 		template: `
@@ -34,12 +33,12 @@ Vue.component(
 					</thead>
 					<tbody>
 						<tr
-							v-for="(row, orderIndex) in rows"
+							v-for="(order, orderIndex) in tableRows"
 							:class="{active: activeOrderIndex === orderIndex}"
 							>
 							<th @click="activateOrder(orderIndex)">order {{orderIndex}}</th>
-							<td v-for="(columnValue, columnIndex) in row">
-								<input type="text" v-model.number="orders[orderIndex][columnIndex]" size="2" />
+							<td v-for="(columnValue, columnIndex) in order">
+								<input type="text" v-model.number="order[columnIndex]" size="2" />
 							</td>
 						</tr>
 					</tbody>
@@ -59,27 +58,30 @@ Vue.component(
 			activeOrder: Array,
 			activeRowIndex: Number,
 			activateRow: Function,
-			patterns: Array
+			patterns: Array,
+			rowCount: Number
 		},
 		computed: {
-			rows: function () {
+			tableRows: function () {
 				let rows = [];
+				let rowCount = this.rowCount;
 				let patterns = this.patterns;
 				let activeOrder = this.activeOrder;
-				activeOrder.forEach(function (channelPatternIndex, channelIndex) {
-					let channelPatternRows = patterns[channelIndex][channelPatternIndex];
-					channelPatternRows.forEach(function (channelRowObject, rowIndex) {
+				activeOrder.forEach(function (channelOrderIndex, channelIndex) {
+					let patternRows = patterns[channelIndex][channelOrderIndex];
+					for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+						let instruction = patternRows[rowIndex];
 						if(!rows[rowIndex]){
 							rows[rowIndex] = [];
 						}
-						rows[rowIndex][channelIndex] = channelRowObject;
-					});
+						rows[rowIndex][channelIndex] = instruction;
+					}
 				});
 				return rows;
 			}
 		},
 		template: `
-			<div class="order-editor">
+			<div class="pattern-editor">
 				<table>
 					<thead>
 						<th>channels</th>
@@ -94,12 +96,12 @@ Vue.component(
 					</thead>
 					<tbody>
 						<tr
-							v-for="(row, rowIndex) in rows"
+							v-for="(row, rowIndex) in tableRows"
 							:class="{active: rowIndex === activeRowIndex}"
 							>
 							<th @click="activateRow(rowIndex)">rowIndex {{rowIndex}}</th>
-							<td v-for="(channelRowObject, channelIndex) in row">
-								<channel-row-editor :row="channelRowObject" />
+							<td v-for="(instruction, channelIndex) in row">
+								<instruction-editor v-if="instruction" :instruction="instruction" />
 							</td>
 						</tr>
 					</tbody>
@@ -134,16 +136,16 @@ Vue.component(
 );
 
 Vue.component(
-	'channel-row-editor',
+	'instruction-editor',
 	{
 		props: {
-			row: Object
+			instruction: Object
 		},
 		template: `
-			<div class="channel-row-editor">
-				<input type="text" v-model.number="row.note" size="2" />
-				<input type="text" v-model.number="row.instrument" size="2" />
-				<input type="text" v-model.number="row.volume" size="2" />
+			<div class="instruction-editor">
+				<input type="text" v-model.number="instruction.note" size="2" />
+				<input type="text" v-model.number="instruction.instrument" size="2" />
+				<input type="text" v-model.number="instruction.volume" size="2" />
 			</div>
 		`
 	}

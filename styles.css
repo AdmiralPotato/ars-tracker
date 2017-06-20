@@ -115,7 +115,8 @@ ul.tab-list li{
 	overflow: hidden;
 }
 ul.tab-list li.active a,
-.order-editor .active{
+.order-editor .active,
+.pattern-editor .active{
 	background-color: #264;
 }
 ul.tab-list li a{
@@ -140,6 +141,6 @@ ul.tab-list li a{
 	width: 100%;
 }
 
-.channel-row-editor{
+.instruction-editor{
 	display: flex;
 }
