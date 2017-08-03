@@ -23,16 +23,16 @@ Vue.component(
 		template: `
 			<div class="instrument-list">
 				<ul class="tab-list noSelect">
-					<li
-						v-for="(item, index) in instruments"
-						:class="{active: item === activeInstrument}"
-						>
-						<a @click="change(index)">{{index}}:{{item.name}}</a>
+					<li v-for="(item, index) in instruments">
+						<button
+							@click="change(index)"
+							:class="{active: item === activeInstrument}"
+						>{{index}}:{{item.name}}</button>
 					</li>
 				</ul>
 				<ul class="tab-list noSelect">
-					<li><a @click="addInstrument">Add</a></li>
-					<li><a @click="deleteInstrument">Delete</a></li>
+					<li><button @click="addInstrument">Add</button></li>
+					<li><button @click="deleteInstrument">Delete</button></li>
 				</ul>
 			</div>
 		`
@@ -69,7 +69,12 @@ Vue.component(
 					<input type="text" size="60" v-model="activeInstrument.name" />
 				</form>
 				<ul class="tab-list noSelect">
-					<li v-for="item in tabs" :class="{active: activeSequenceDescription.name === item.name}"><a @click="changeTab(item)">{{item.name}}</a></li>
+					<li v-for="item in tabs">
+						<button
+							@click="changeTab(item)"
+							:class="{active: activeSequenceDescription.name === item.name}"
+						>{{item.name}}</button>
+					</li>
 				</ul>
 				<instrument-sequence
 					:name="activeSequenceDescription.name"

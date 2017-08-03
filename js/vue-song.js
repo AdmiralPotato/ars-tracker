@@ -38,12 +38,14 @@ Vue.component(
 					</li>
 					<li
 						v-for="(symbol, name) in playbackStates"
-						:class="\{active: name === playbackState}"
 						class="noSelect"
+					>
+						<button
+							@click="changePlaybackState(name)"
+							:class="{active: name === playbackState}"
 						>
-						<a @click="changePlaybackState(name)">
 							<span v-html="symbol"></span>
-						</a>
+						</button>
 					</li>
 				</ul>
 			</div>

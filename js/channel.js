@@ -107,10 +107,15 @@ Channel.prototype = {
 		let channel = this;
 		let note = channel.noteIndex + channel.valueMap.arpeggio;
 		let freq = channel.keyIndexToFreq(note) + channel.valueMap.pitch;
-		let volume = channel.isMuted ? 0 : (channel.volume * channel.valueMap.volume) >> 2;
+		let maskedVolume = channel.valueMap.volume & 15;
+		let overrideReset = channel.valueMap.volume & ET209.VOLUME_RESET_FLAG;
+		let volume = channel.isMuted ? 0 : (channel.volume * maskedVolume) >> 2;
 		if(channel.needWaveformReset) {
 			volume |= ET209.VOLUME_RESET_FLAG;
 			channel.needWaveformReset = false;
+		}
+		if(overrideReset){
+			volume ^= ET209.VOLUME_RESET_FLAG;
 		}
 		audio.apu.write_voice_rate(channel.voiceIndex, freq);
 		if(channel.needWaveformUpdate){
@@ -123,10 +128,15 @@ Channel.prototype = {
 	},
 	goNoise: function() {
 		let channel = this;
-		let volume = channel.isMuted ? 0 : (channel.volume * channel.valueMap.volume) >> 2;
+		let maskedVolume = channel.valueMap.volume & 15;
+		let overrideReset = channel.valueMap.volume & ET209.VOLUME_RESET_FLAG;
+		let volume = channel.isMuted ? 0 : (channel.volume * maskedVolume) >> 2;
 		if(channel.needWaveformReset) {
 			volume |= ET209.VOLUME_RESET_FLAG;
 			channel.needWaveformReset = false;
+		}
+		if(overrideReset){
+			volume ^= ET209.VOLUME_RESET_FLAG;
 		}
 		audio.apu.write_noise_period(channel.noteIndex);
 		if(channel.needWaveformUpdate){

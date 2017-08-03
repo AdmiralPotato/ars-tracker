@@ -18,11 +18,13 @@ Vue.component(
 		template: `
 			<div class="collapse noSelect">
 				<ul class="tab-list">
-					<li :class="\{active: collapsed}">
-						<a @click="collapsed = !collapsed">
+					<li>
+						<button
+							:class="{active: collapsed}"
+							@click="collapsed = !collapsed">
 							<span class="checkbox"></span>
 							<span>{{name}}</span>
-						</a>
+						</button>
 					</li>
 				</ul>
 				<div v-if="collapsed">
