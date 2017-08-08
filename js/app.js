@@ -20,6 +20,7 @@ let app = {
 		activeSongIndex: 0,
 		activeOrderIndex: 0,
 		activeRowIndex: 0,
+		speakerSetup: 'stereo',
 		playbackState: 'paused'
 	},
 	projectState: {
@@ -101,7 +102,7 @@ let app = {
 					if(app.editorState.playbackState !== 'paused'){
 						playback.processOneFrame();
 					}
-					audio.generate_one_frame();
+					audio.generate_one_frame(app.editorState.speakerSetup);
 				}
 			},
 			1000/60
@@ -221,13 +222,19 @@ app.vue = new Vue({
 			app.editorState.activeRowIndex = rowIndex;
 		},
 		changePlaybackState: function (playbackState) {
-			console.log('change playbackState', playbackState);
-			app.editorState.playbackState = playbackState;
+			this.changeValueByName('playbackState', playbackState);
 			if(playbackState === 'paused'){
 				channels.forEach(function(channel) {
 					channel.noteCut();
 				});
 			}
+		},
+		changeSpeakerSetup: function (speakerSetup) {
+			this.changeValueByName('speakerSetup', speakerSetup);
+		},
+		changeValueByName: function (name, value) {
+			console.log('change ' + name, value);
+			app.editorState[name] = value;
 		}
 	},
 	template: `
@@ -236,7 +243,9 @@ app.vue = new Vue({
 			<song
 				:song="projectState.songs[editorState.activeSongIndex]"
 				:playbackState="editorState.playbackState"
+				:speakerSetup="editorState.speakerSetup"
 				:changePlaybackState="changePlaybackState"
+				:changeSpeakerSetup="changeSpeakerSetup"
 				/>
 			<collapse :openByDefault="false" name="oscilloscope"><vue-oscilloscope :analyser="audio.analyser" /></collapse>
 			<collapse :openByDefault="false" name="instrument list / editor"><instrument-list :activeInstrument="editorState.activeInstrument" :change="changeInstrument" /></collapse>
