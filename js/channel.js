@@ -6,6 +6,9 @@ let Channel = function(voiceIndex, isNoise){
 	channel.isNoise = isNoise;
 	channel.instrument = defaultInstrument;
 	channel.volume = 15;
+	channel.panBits = 0;
+	channel.curBentPitch = 0;
+	channel.hwslideBits = 0;
 	channel.displayVolume = 0;
 	channel.isMuted = false;
 	channel.noteIndex = null;
@@ -39,6 +42,7 @@ Channel.prototype = {
 		this.needWaveformReset = true;
 		this.needWaveformUpdate = true;
 		this.isActive = true;
+		this.curBentPitch = 0;
 		this.resetSequences();
 	},
 	noteOff: function() {
@@ -55,7 +59,22 @@ Channel.prototype = {
 		this.volume = volume;
 	},
 	processEffect: function(effect, parameter) {
-		// (we will leave this blank right now)
+		if(effect in this._effectHandlers){
+			this._effectHandlers[effect].call(this, parameter);
+		}
+	},
+	// Effects that affect the CHANNEL (pan, etc.) go here. Effects that
+	// affect PLAYBACK go into channel.js.
+	_effectHandlers: {
+		pan: function(param) {
+			let panBits = 0;
+			if(param & 0x0F) panBits |= 0x40;
+			if(param & 0xF0) panBits |= 0x80;
+			this.panBits = panBits;
+		},
+		hwslide: function(param) {
+			this.hwslideBits = (param<<14)&0xC000;
+		},
 	},
 	setIsMuted: function(isMuted) {
 		this.isMuted = isMuted;
@@ -106,7 +125,26 @@ Channel.prototype = {
 	goVoice: function() {
 		let channel = this;
 		let note = channel.noteIndex + channel.valueMap.arpeggio;
-		let freq = channel.keyIndexToFreq(note) + channel.valueMap.pitch;
+		/*
+		  This bit of logic emulates the curious wraparound behavior
+		  of the real playback engine.
+
+		  If you hold the pitchbend in one direction long enough,
+		  it will eventually wrap around and break the world.
+		*/
+		channel.curBentPitch = (channel.curBentPitch + channel.valueMap.pitch) & 65535;
+		let freq = (channel.keyIndexToFreq(note) + channel.curBentPitch) & 65535;
+		if(freq >= 16384) {
+			/*
+			  pitchbending knocked us out of range, which value we
+			  peg to depends on which direction curBentPitch is
+			  pointing in
+			  */
+			if(channel.curBentPitch & 32768)
+				freq = 0; // pitch was bent DOWN
+			else
+				freq = 16383; // pitch was bent UP
+		}
 		let maskedVolume = channel.valueMap.volume & 15;
 		let overrideReset = channel.valueMap.volume & ET209.VOLUME_RESET_FLAG;
 		let volume = channel.isMuted ? 0 : (channel.volume * maskedVolume) >> 2;
@@ -117,9 +155,9 @@ Channel.prototype = {
 		if(overrideReset){
 			volume ^= ET209.VOLUME_RESET_FLAG;
 		}
-		audio.apu.write_voice_rate(channel.voiceIndex, freq);
+		audio.apu.write_voice_rate(channel.voiceIndex, freq | this.hwslideBits);
 		if(channel.needWaveformUpdate){
-			audio.apu.write_voice_waveform(channel.voiceIndex, channel.valueMap.waveform);
+			audio.apu.write_voice_waveform(channel.voiceIndex, channel.valueMap.waveform | channel.panBits);
 			channel.needWaveformUpdate = false;
 		}
 		audio.apu.write_voice_volume(channel.voiceIndex, volume);

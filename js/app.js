@@ -222,12 +222,8 @@ app.vue = new Vue({
 			app.editorState.activeRowIndex = rowIndex;
 		},
 		changePlaybackState: function (playbackState) {
+			playback.playbackStateDidChange(app.editorState.playbackState, playbackState);
 			this.changeValueByName('playbackState', playbackState);
-			if(playbackState === 'paused'){
-				channels.forEach(function(channel) {
-					channel.noteCut();
-				});
-			}
 		},
 		changeSpeakerSetup: function (speakerSetup) {
 			this.changeValueByName('speakerSetup', speakerSetup);
