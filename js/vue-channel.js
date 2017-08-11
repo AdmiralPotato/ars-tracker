@@ -66,6 +66,30 @@ let instructionProperties = [
 	'volume',
 	'fx0',
 ];
+
+let getInstruction = function(editor){
+	let state = editor.editorState;
+	let channelOrderIndex = editor.activeOrder[state.activeChannelIndex];
+	let patternRows = editor.patterns[state.activeChannelIndex][channelOrderIndex];
+	let instruction = patternRows[state.activeRowIndex];
+	return instruction;
+};
+let eraseValue = function (editor) {
+	let instruction = getInstruction(editor);
+	let property = editor.editorState.activeProperty;
+	if(property.indexOf('fx') === 0){
+		let fxIndex = parseInt(property.substring(2), 10);
+		instruction.fx[fxIndex] = null;
+		instruction.fx = instruction.fx.slice();
+	} else {
+		instruction[property] = undefined;
+	}
+};
+let keyHandlerMap = {
+	'Backspace': eraseValue,
+	'Delete': eraseValue,
+};
+
 Vue.component(
 	'pattern-editor',
 	{
@@ -117,7 +141,8 @@ Vue.component(
 			moveLeft:  function(e){this.moveCursorRelative(e, -1,  0);},
 			moveRight: function(e){this.moveCursorRelative(e,  1,  0);},
 			moveCursorRelative: function (keydownEvent, x, y) {
-				//console.log(arguments);
+				keydownEvent.stopPropagation();
+				keydownEvent.stopImmediatePropagation();
 				keydownEvent.preventDefault();
 				let currentPropertyIndex = instructionProperties.indexOf(this.editorState.activeProperty);
 				let propertyBeforeWrap = currentPropertyIndex + x;
@@ -132,6 +157,14 @@ Vue.component(
 					propertyName
 				);
 			},
+			input: function (keydownEvent) {
+				let handler = keyHandlerMap[keydownEvent.key];
+				if(handler){
+					keydownEvent.preventDefault();
+					handler(this);
+					console.log(keydownEvent.key);
+				}
+			},
 			wrapRange: function(n, max){
 				return (n + max) % max;
 			},
@@ -143,10 +176,11 @@ Vue.component(
 			<div
 				class="pattern-editor"
 				tabindex="0"
-				@keydown.up="moveUp"
-				@keydown.down="moveDown"
-				@keydown.left="moveLeft"
-				@keydown.right="moveRight"
+				@keydown.capture.up="moveUp"
+				@keydown.capture.down="moveDown"
+				@keydown.capture.left="moveLeft"
+				@keydown.capture.right="moveRight"
+				@keydown="input"
 			>
 				<table>
 					<thead>
