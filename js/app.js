@@ -94,26 +94,34 @@ let app = {
 			}
 		}
 	},
-	audioInterval: null,
+	_audioInterval: null,
+	_audioAnimationFrame: function() {
+		if(app._audioInterval == null) return;
+		app._makeMoreAudio();
+		requestAnimationFrame(app._audioAnimationFrame);
+	},
+	_makeMoreAudio: function(){
+		while(audio.context.currentTime > audio.minPlayTime - 0.1){
+			channels.forEach(function(channel) {
+				channel.go();
+			});
+			if(app.editorState.playbackState !== 'paused'){
+				playback.processOneFrame();
+			}
+			audio.generate_one_frame(app.editorState.speakerSetup);
+		}
+	},
 	startAudio: function(){
-		this.audioInterval = setInterval(
-			function(){
-				while(audio.context.currentTime > audio.minPlayTime - 0.1){
-					channels.forEach(function(channel) {
-						channel.go();
-					});
-					if(app.editorState.playbackState !== 'paused'){
-						playback.processOneFrame();
-					}
-					audio.generate_one_frame(app.editorState.speakerSetup);
-				}
-			},
+		if(app._audioInterval != null) return;
+		app._audioInterval = setInterval(
+			app._makeMoreAudio,
 			1000/60
 		);
+		app._audioAnimationFrame();
 	},
 	stopAudio: function () {
-		clearInterval(this.audioInterval);
-		this.audioInterval = null;
+		clearInterval(app._audioInterval);
+		app._audioInterval = null;
 	},
 	loadProject: function (projectAddress) {
 		let request = new XMLHttpRequest();
