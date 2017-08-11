@@ -5,6 +5,10 @@ let templatePad = function (n, padTemplate) {
 	return (padTemplate + str).substring(str.length);
 };
 
+let formatByte = function (n) {
+	return templatePad(n.toString(16).toLocaleUpperCase(), '00');
+}
+
 Vue.component(
 	'order-editor',
 	{
@@ -30,7 +34,7 @@ Vue.component(
 			}
 		},
 		methods: {
-			templatePad: templatePad
+			formatByte: formatByte
 		},
 		template: `
 			<div class="order-editor">
@@ -44,7 +48,7 @@ Vue.component(
 							v-for="(order, orderIndex) in tableRows"
 							:class="{active: activeOrderIndex === orderIndex}"
 							>
-							<th @click="activateOrder(orderIndex)">order {{templatePad(orderIndex.toString(16).toLocaleUpperCase(), '00')}}</th>
+							<th @click="activateOrder(orderIndex)">order {{formatByte(orderIndex)}}</th>
 							<td v-for="(columnValue, columnIndex) in order">
 								<input type="text" v-model.number="order[columnIndex]" size="2" />
 							</td>
@@ -89,7 +93,7 @@ Vue.component(
 			}
 		},
 		methods: {
-			templatePad: templatePad
+			formatByte: formatByte
 		},
 		template: `
 			<div class="pattern-editor">
@@ -114,7 +118,7 @@ Vue.component(
 							@click="activateRow(rowIndex)"
 							:class="{active: rowIndex === activeRowIndex}"
 							>
-							<th>row {{templatePad(rowIndex.toString(16).toLocaleUpperCase(),'00')}}</th>
+							<th>row {{formatByte(rowIndex)}}</th>
 							<td v-for="(instruction, channelIndex) in row">
 								<instruction-editor
 									:isNoise="channels[channelIndex].isNoise"
@@ -171,7 +175,7 @@ function note_value_for_display(value) {
 function noise_value_for_display(value) {
 	if(value === false) return 'OFF';
 	else if(value === null) return 'CUT';
-	else if(value !== undefined) { return '$'+templatePad(value.toString(16).toLocaleUpperCase(), '00'); }
+	else if(value !== undefined) { return '$'+formatByte(value); }
 	else return '···';
 }
 
@@ -212,7 +216,7 @@ Vue.component(
 				return this.passthrough('note', '···', converter);
 			},
 			instrument: function () {
-				return this.passthrough('instrument', '··', function(i) { return templatePad(i.toString(16).toLocaleUpperCase(),'00'); } );
+				return this.passthrough('instrument', '··', function(i) { return formatByte(i); } );
 			},
 			volume: function () {
 				return this.passthrough('volume', '·', function(i) { return i.toString(16).toLocaleUpperCase(); });
