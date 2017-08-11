@@ -6,9 +6,9 @@ if(!ac){
 }
 let audioContext = new ac();
 let audioAnalyser = audioContext.createAnalyser();
-let audioGain = audioContext.createGain();
-audioGain.connect(audioContext.destination);
-audioGain.connect(audioAnalyser);
+let audioGainNode = audioContext.createGain();
+audioGainNode.connect(audioContext.destination);
+audioGainNode.connect(audioAnalyser);
 
 let audio = {
 	SAMPLES_PER_FRAME: 800,
@@ -17,7 +17,7 @@ let audio = {
 	frames: [],
 	context: audioContext,
 	analyser: audioAnalyser,
-	gain: audioGain,
+	gainNode: audioGainNode,
 	minPlayTime: 0,
 	lastBuffer: null,
 	generate_one_frame: function(speakerSetup) {
@@ -55,7 +55,8 @@ let audio = {
 		let a = audio;
 		let bufferSourceNode = a.context.createBufferSource();
 		bufferSourceNode.buffer = buffer;
-		bufferSourceNode.connect(a.gain);
+		a.gainNode.gain.value = app.editorState.volume;
+		bufferSourceNode.connect(a.gainNode);
 		let time = a.context.currentTime;
 		let whenToPlay = a.minPlayTime < time ? time : a.minPlayTime;
 		bufferSourceNode.start(whenToPlay);
