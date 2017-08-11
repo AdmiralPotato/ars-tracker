@@ -9,6 +9,7 @@ let playback = {
 		if(to === 'paused'){
 			channels.forEach(function(channel) {
 				channel.noteCut();
+				channel.forgetFX();
 			});
 		}
 		else if(from === 'paused'){

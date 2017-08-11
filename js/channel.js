@@ -51,6 +51,10 @@ Channel.prototype = {
 	noteCut: function() {
 		this.isActive = false;
 	},
+	forgetFX: function() {
+		this.panBits = 0;
+		this.hwsliteBits = 0;
+	},
 	setActiveInstrument: function(instrument) {
 		this.instrument = instrument;
 	},
