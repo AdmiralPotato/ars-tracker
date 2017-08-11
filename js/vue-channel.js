@@ -7,7 +7,7 @@ let templatePad = function (n, padTemplate) {
 
 let formatByte = function (n) {
 	return templatePad(n.toString(16).toLocaleUpperCase(), '00');
-}
+};
 
 Vue.component(
 	'order-editor',
@@ -166,18 +166,18 @@ let effect_name_to_letter = {
 	"tempo":"T",
 	"waveform":"V",
 }
-function note_value_for_display(value) {
+let note_value_for_display = function (value) {
 	if(value === false) return 'OFF';
 	else if(value === null) return 'CUT';
 	else if(value !== undefined) { return note_value_names[value%12]+octave_names[Math.floor(value/12)]; }
 	else return '···';
-}
-function noise_value_for_display(value) {
+};
+let noise_value_for_display = function (value) {
 	if(value === false) return 'OFF';
 	else if(value === null) return 'CUT';
 	else if(value !== undefined) { return '$'+formatByte(value); }
 	else return '···';
-}
+};
 
 Vue.component(
 	'fx-editor',
