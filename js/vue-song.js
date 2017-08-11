@@ -5,8 +5,7 @@ Vue.component(
 	{
 		props: {
 			song: Object,
-			playbackState: String,
-			speakerSetup: String,
+			editorState: Object,
 			changePlaybackState: Function,
 			changeSpeakerSetup: Function
 		},
@@ -47,8 +46,8 @@ Vue.component(
 						<button
 							v-for="(symbol, name) in playbackStates"
 							@click="changePlaybackState(name)"
-							:title="playbackState"
-							:class="{active: name === playbackState}"
+							:title="editorState.playbackState"
+							:class="{active: name === editorState.playbackState}"
 						>
 							<span v-html="symbol"></span>
 						</button>
@@ -57,11 +56,15 @@ Vue.component(
 						<button
 							v-for="(symbol, name) in speakerSetups"
 							@click="changeSpeakerSetup(name)"
-							:class="{active: name === speakerSetup}"
+							:class="{active: name === editorState.speakerSetup}"
 						>
 							<span v-html="symbol"></span>
 							<span>{{name}}</span>
 						</button>
+					</li>
+					<li>
+						<label for="editorVolume">Editor volume: {{editorState.volume}}</label>
+						<input id="editorVolume" type="range" min="0" max="4" step="0.1" v-model="editorState.volume">
 					</li>
 				</ul>
 			</div>

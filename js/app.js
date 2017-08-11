@@ -13,6 +13,7 @@ let getLastValueInArray = function (array) {
 
 let app = {
 	editorState: {
+		volume: 1,
 		onKeys: [],
 		activeInstrument: instruments[0],
 		activeChannels: [0, 1, 2],
@@ -238,8 +239,7 @@ app.vue = new Vue({
 			<h1>ARS-Tracker</h1>
 			<song
 				:song="projectState.songs[editorState.activeSongIndex]"
-				:playbackState="editorState.playbackState"
-				:speakerSetup="editorState.speakerSetup"
+				:editorState="editorState"
 				:changePlaybackState="changePlaybackState"
 				:changeSpeakerSetup="changeSpeakerSetup"
 				/>

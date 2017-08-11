@@ -178,6 +178,7 @@ ul.tab-list li a{
 }
 
 .song ul.tab-list li input{
+	display: block;
 	width: 100%;
 }
 .song ul.tab-list li.buttons{
