@@ -1,0 +1,101 @@
+"use strict";
+
+let note_value_names = ["C-","C#","D-","D#","E-","F-","F#","G-","G#","A-","A#","B-"];
+let octave_names = ["Z","0","1","2","3","4","5","6","7","8"];
+let effect_name_to_letter = {
+	"hwslide":"3",
+	"branch":"B",
+	"halt":"C",
+	"skip":"D",
+	"fastness":"F",
+	"pan":"P",
+	"speed":"S",
+	"tempo":"T",
+	"waveform":"V",
+};
+let note_value_for_display = function (value) {
+	if(value === false) return 'OFF';
+	else if(value === null) return 'CUT';
+	else if(value !== undefined) { return note_value_names[value%12]+octave_names[Math.floor(value/12)]; }
+	else return '···';
+};
+let noise_value_for_display = function (value) {
+	if(value === false) return 'OFF';
+	else if(value === null) return 'CUT';
+	else if(value !== undefined) { return '$'+formatByte(value); }
+	else return '···';
+};
+
+Vue.component(
+	'instruction-editor',
+	{
+		props: {
+			isNoise: Boolean,
+			instruction: Object,
+			isActive: Boolean,
+			setActive: Function,
+			activeProperty: String
+		},
+		computed: {
+			note: function () {
+				let converter = this.isNoise ? noise_value_for_display : note_value_for_display;
+				return this.passthrough('note', '···', converter);
+			},
+			instrument: function () {
+				return this.passthrough('instrument', '··', function(i) { return formatByte(i); } );
+			},
+			volume: function () {
+				return this.passthrough('volume', '·', function(i) { return i.toString(16).toLocaleUpperCase(); });
+			},
+			fx0: function(){
+				return this.getFxByIndex(0);
+			}
+		},
+		methods: {
+			passthrough: function (propertyName, displayForEmpty, converter) {
+				return this.instruction && this.instruction[propertyName] !== undefined ? converter ? converter(this.instruction[propertyName]) : this.instruction[propertyName] : displayForEmpty;
+			},
+			getFxByIndex: function (fxIndex) {
+				if(this.instruction === undefined || this.instruction.fx === undefined || !this.instruction.fx[fxIndex]) {
+					return '···';
+				}
+				else {
+					let fx = this.instruction.fx[fxIndex];
+					return effect_name_to_letter[fx.type] + formatByte(fx.value);
+				}
+			},
+		},
+		template: `
+			<div class="instruction-editor">
+				<table-input :activeProperty="isActive ? activeProperty : ''" :setActive="setActive" name="note"       :value="note"       class="entry" :class="isNoise ? 'c2' : 'c3'" />
+				<table-input :activeProperty="isActive ? activeProperty : ''" :setActive="setActive" name="instrument" :value="instrument" class="entry c2" />
+				<table-input :activeProperty="isActive ? activeProperty : ''" :setActive="setActive" name="volume"     :value="volume"     class="entry c1" />
+				<table-input :activeProperty="isActive ? activeProperty : ''" :setActive="setActive" name="fx0"        :value="fx0"        class="entry c3" />
+			</div>
+		`
+	}
+);
+
+Vue.component(
+	'table-input',
+	{
+		props: {
+			name: String,
+			value: [String, Number],
+			setActive: Function,
+			activeProperty: String
+		},
+		methods: {
+			click: function () {
+				this.setActive(this.name);
+			}
+		},
+		template: `
+			<span
+				@click="click"
+				:title="name"
+				:class="{active: activeProperty === name}"
+			>{{value}}</span>
+		`
+	}
+);

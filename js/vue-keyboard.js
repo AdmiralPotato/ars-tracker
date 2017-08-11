@@ -19,7 +19,7 @@ Vue.component(
 		},
 		methods: {
 			serialize: function(){
-				return `${this.name} ${this.octave} : ${this.octave * 12 + this.index}`;
+				return `${this.name} ${this.octave} : ${this.octave * 12 + this.fxIndex}`;
 			},
 			on: function () {
 				this.holding = true;

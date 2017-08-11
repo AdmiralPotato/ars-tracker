@@ -21,6 +21,8 @@ let app = {
 		activeSongIndex: 0,
 		activeOrderIndex: 0,
 		activeRowIndex: 0,
+		activeChannelIndex: 0,
+		activeProperty: 'note',
 		speakerSetup: 'stereo',
 		playbackState: 'paused'
 	},
@@ -152,7 +154,12 @@ let app = {
 };
 
 app.startAudio();
-app.loadProject('https://gist.githubusercontent.com/SolraBizna/c64007be2249a43eda2af47c2736a5df/raw/HuntWork.json');
+let testProjects = [
+	'https://gist.githubusercontent.com/SolraBizna/c64007be2249a43eda2af47c2736a5df/raw/HuntWork.json',
+	'https://gist.githubusercontent.com/SolraBizna/4e44ef4dce1080fb844ff6cf8b1f2492/raw/9a15bb8618290a9b8688ec1dba4b347731f16147/Yesterday.json',
+	'https://gist.githubusercontent.com/SolraBizna/4e44ef4dce1080fb844ff6cf8b1f2492/raw/9a15bb8618290a9b8688ec1dba4b347731f16147/MrOlivia.json'
+];
+app.loadProject(testProjects[2]);
 
 app.vue = new Vue({
 	el: '#appTarget',
@@ -176,25 +183,12 @@ app.vue = new Vue({
 		changeInstrument: function (instrumentIndex) {
 			app.editorState.activeInstrument = app.projectState.instruments[instrumentIndex];
 		},
-		toggleChannel: function (channelIndex) {
-			let activeChannels = app.editorState.activeChannels;
-			let alreadyThere = activeChannels.indexOf(channelIndex) !== -1;
-			if(alreadyThere){
-				arrayRemove(activeChannels, channelIndex);
-			} else {
-				activeChannels.push(channelIndex);
-			}
-		},
 		activateOrder: function (orderIndex) {
 			console.log('activate order', orderIndex);
 			app.editorState.activeOrderIndex = orderIndex;
 			if(app.editorState.playbackState !== 'paused'){
 				app.editorState.activeRowIndex = 0;
 			}
-		},
-		activateRow: function (rowIndex) {
-			console.log('activate row', rowIndex);
-			app.editorState.activeRowIndex = rowIndex;
 		},
 		changePlaybackState: function (playbackState) {
 			playback.playbackStateDidChange(app.editorState.playbackState, playbackState);
@@ -233,11 +227,8 @@ app.vue = new Vue({
 			<collapse :openByDefault="true" name="pattern editor">
 				<pattern-editor
 					:channels="channels"
-					:activeChannels="editorState.activeChannels"
-					:toggleChannel="toggleChannel"
+					:editorState="editorState"
 					:activeOrder="projectState.songs[editorState.activeSongIndex].orders[editorState.activeOrderIndex]"
-					:activeRowIndex="editorState.activeRowIndex"
-					:activateRow="activateRow"
 					:patterns="projectState.songs[editorState.activeSongIndex].patterns"
 					:rowCount="projectState.songs[editorState.activeSongIndex].rows"
 					/>
