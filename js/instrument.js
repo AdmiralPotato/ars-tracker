@@ -2,7 +2,7 @@
 
 let Instrument = function(argsObject){
 	let args = argsObject || {};
-	this.name = args.name || 'Instrument '+ instruments.length;
+	this.name = args.name || 'New Instrument';
 	this.type = args.type || 'voice';
 	this.autoperiod = args.autoperiod || null;
 	this.volume = new Sequence(args.volume || '| / 15');
@@ -75,23 +75,3 @@ Sequence.prototype = {
 		return this.values[index];
 	}
 };
-
-let defaultInstrument = new Instrument({
-	name: 'defaultInstrument',
-	volume: '10 15 14 13 12 11 | / 10 9 8 8 7 7 6 6 5 5 5 4 4 4 4 3 3 3 3 3 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 0',
-	arpeggio: '0',
-	pitch: '0',
-	waveform: '32'
-});
-let noiseInstrument = new Instrument({
-	name: 'noiseInstrument',
-	volume: '| / 9 6 3 0',
-	arpeggio: '0',
-	pitch: '0',
-	waveform: '0'
-});
-
-let instruments = [
-	defaultInstrument,
-	noiseInstrument
-];

@@ -5,19 +5,15 @@ Vue.component(
 	{
 		props: {
 			activeInstrument: Instrument,
-			change: Function
-		},
-		data: function () {
-			return {
-				instruments: instruments
-			};
+			change: Function,
+			instruments: Array
 		},
 		methods: {
 			addInstrument: function () {
-				instruments.push(new Instrument());
+				app.projectState.instruments.push(new Instrument());
 			},
 			deleteInstrument: function () {
-				arrayRemove(instruments, this.activeInstrument);
+				arrayRemove(app.projectState.instruments, this.activeInstrument);
 			}
 		},
 		template: `

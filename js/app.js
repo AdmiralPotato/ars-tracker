@@ -15,7 +15,7 @@ let app = {
 	editorState: {
 		volume: 1,
 		onKeys: [],
-		activeInstrument: instruments[0],
+		activeInstrument: new Instrument(), // TODO: make this default to null
 		activeChannels: [0, 1, 2],
 		polyphony: [{}, {}, {}, {}, {}, {}, {}, {}],
 		activeSongIndex: 0,
@@ -25,7 +25,9 @@ let app = {
 		playbackState: 'paused'
 	},
 	projectState: {
-		instruments: instruments,
+		instruments: [
+			new Instrument() // TODO: handle zero instruments
+		],
 		songs: [{
 			metadata: {title: 'Untitled'},
 			orders: [[0,0,0,0,0,0,0,0]],
@@ -117,47 +119,11 @@ let app = {
 		let request = new XMLHttpRequest();
 		request.responseType = 'json';
 		request.addEventListener('load', function () {
-			app.hydrate(request.response);
+			app.vue.projectState = app.projectState = hydration.hydrate(request.response);
+			app.editorState.activeInstrument = app.projectState.instruments[0];
 		});
 		request.open('get', projectAddress, true);
 		request.send();
-	},
-	hydrate: function (loadedState) {
-		//instruments
-		instruments.length = 0;
-		loadedState.instruments.forEach(function (instrumentData) {
-			let instrument = new Instrument(instrumentData);
-			instruments.push(instrument);
-		});
-		app.editorState.activeInstrument = instruments[0];
-
-		//de-rle the patterns
-		app.projectState.songs.length = 0;
-		loadedState.songs.forEach(function (song) {
-			song.patterns = song.patterns.map(function (channel) {
-				if(!channel.length){
-					channel.push([{repeat: song.rows}]);
-				}
-				return channel.map(function (rlePattern) {
-					let rleDecodedPattern = app.rleDecodePattern(rlePattern);
-					let missingRows = song.rows - rleDecodedPattern.length;
-					while(missingRows > 0){
-						rleDecodedPattern.push({});
-						missingRows--;
-					}
-					return rleDecodedPattern;
-				});
-			});
-			app.projectState.songs.push(song);
-		});
-	},
-	rleDecodePattern: function(inputPattern){
-		let result = [];
-		inputPattern.forEach(function(run){
-			let expandedRun = app.repeatCopy(run);
-			result.push.apply(result, expandedRun);
-		});
-		return result;
 	},
 	repeatCopy: function (source) {
 		let copies = source.repeat || 1;
@@ -200,7 +166,7 @@ app.vue = new Vue({
 			app.handleKeyOff(index);
 		},
 		changeInstrument: function (instrumentIndex) {
-			app.editorState.activeInstrument = instruments[instrumentIndex];
+			app.editorState.activeInstrument = app.projectState.instruments[instrumentIndex];
 		},
 		toggleChannel: function (channelIndex) {
 			let activeChannels = app.editorState.activeChannels;
@@ -244,7 +210,7 @@ app.vue = new Vue({
 				:changeSpeakerSetup="changeSpeakerSetup"
 				/>
 			<collapse :openByDefault="false" name="oscilloscope"><vue-oscilloscope :analyser="audio.analyser" /></collapse>
-			<collapse :openByDefault="false" name="instrument list / editor"><instrument-list :activeInstrument="editorState.activeInstrument" :change="changeInstrument" /></collapse>
+			<collapse :openByDefault="false" name="instrument list / editor"><instrument-list :activeInstrument="editorState.activeInstrument" :instruments="projectState.instruments" :change="changeInstrument" /></collapse>
 			<collapse :openByDefault="false" name="instrument editor"><instrument-editor :activeInstrument="editorState.activeInstrument" :key="editorState.activeInstrument.name" /></collapse>
 			<collapse :openByDefault="false" name="keyboard"><keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="editorState.onKeys" /></collapse>
 			<collapse :openByDefault="true" name="order editor">

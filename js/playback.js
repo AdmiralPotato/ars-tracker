@@ -37,8 +37,9 @@ let playback = {
 		channels.forEach(function (channel, channelIndex) {
 			let pattern = song.patterns[channelIndex][order[channelIndex]];
 			let instruction = pattern[activeRowIndex];
+			if(instruction === undefined) return;
 			if(instruction.instrument !== undefined){
-				channel.setActiveInstrument(instruments[instruction.instrument]);
+				channel.setActiveInstrument(app.projectState.instruments[instruction.instrument]);
 			}
 			if(instruction.volume !== undefined){
 				channel.setVolume(instruction.volume);
