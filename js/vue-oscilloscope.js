@@ -8,15 +8,13 @@ Vue.component(
 		},
 		created: function () {
 			let t = this;
-			let oscilloscope = new Oscilloscope(t.analyser);
+			let oscilloscope = new Oscilloscope();
 			t.serialize = function(){
-				t.analyser.getByteTimeDomainData(oscilloscope.data);
-				return JSON.stringify(oscilloscope.data);
+				let ret = [audio.lastLeftArray, audio.lastRightArray];
+				return JSON.stringify(ret);
 			};
 			t.update = function(context, width, height, time){
-				oscilloscope.width = width;
-				oscilloscope.height = height;
-				oscilloscope.draw(context);
+				oscilloscope.draw(context, width, height, audio.SAMPLES_PER_FRAME);
 			};
 		},
 		template: `

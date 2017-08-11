@@ -5,10 +5,8 @@ if(!ac){
 	alert('Your browser cannot.');
 }
 let audioContext = new ac();
-let audioAnalyser = audioContext.createAnalyser();
-let audioGainNode = audioContext.createGain();
-audioGainNode.connect(audioContext.destination);
-audioGainNode.connect(audioAnalyser);
+let audioGain = audioContext.createGain();
+audioGain.connect(audioContext.destination);
 
 let audio = {
 	SAMPLES_PER_FRAME: 800,
@@ -16,10 +14,11 @@ let audio = {
 	apu: new ET209(),
 	frames: [],
 	context: audioContext,
-	analyser: audioAnalyser,
-	gainNode: audioGainNode,
+	gainNode: audioGain,
 	minPlayTime: 0,
 	lastBuffer: null,
+	lastLeftArray: null,
+	lastRightArray: null,
 	generate_one_frame: function(speakerSetup) {
 		let a = audio;
 		let channelCount = speakerSetup === 'mono' ? 1 : 2;
@@ -36,6 +35,14 @@ let audio = {
 		}
 		else{
 			a.apu.generate_stereo_arrays(buffer.getChannelData(0), buffer.getChannelData(1), a.SAMPLES_PER_FRAME);
+		}
+		// for the oscilloscope
+		audio.lastLeftArray = Array.from(buffer.getChannelData(0));
+		if(buffer.numberOfChannels > 1) {
+			audio.lastRightArray = Array.from(buffer.getChannelData(1));
+		}
+		else {
+			audio.lastRightArray = null;
 		}
 		if(a.lastBuffer !== null){
 			for (let i = 0; i < Math.min(channelCount, a.lastBuffer.numberOfChannels); i++) {
