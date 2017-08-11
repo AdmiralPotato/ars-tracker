@@ -5,6 +5,7 @@ let Oscilloscope = function() {
 
 Oscilloscope.prototype = {
 	_drawData: function(context, width, height, data, count) {
+		if(data == null) return;
 		context.beginPath();
 		context.moveTo(0, data[0]*height*2+height/2);
 		for(var x = 1; x < count; ++x) {
