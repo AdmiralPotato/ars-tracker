@@ -191,7 +191,7 @@ ul.tab-list li a{
 .pattern-editor{
 	font-family: monospace;
 	font-size: 0.875rem;
-	line-height: 1.5em;
+	line-height: 100%;
 	white-space: nowrap;
 }
 .pattern-editor th.channel{
