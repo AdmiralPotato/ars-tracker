@@ -306,7 +306,7 @@ Vue.component(
 			input: function (keydownEvent) {
 				let filter = keyFilterMap[app.editorState.activeProperty];
 				if(filter && filter(keydownEvent)) {
-					// The filter handled the
+					// The filter handled the event
 					keydownEvent.preventDefault();
 					return;
 				}
