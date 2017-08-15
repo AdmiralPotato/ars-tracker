@@ -5,7 +5,7 @@ let Instrument = function(argsObject){
 	this.name = args.name || 'New Instrument';
 	this.type = args.type || 'voice';
 	this.autoperiod = args.autoperiod || null;
-	this.volume = new Sequence(args.volume || '| / 15');
+	this.volume = new Sequence(args.volume || '| 15 / 0');
 	this.arpeggio = new Sequence(args.arpeggio || '0');
 	this.pitch = new Sequence(args.pitch || '0');
 	this.waveform = new Sequence(args.waveform || '48');
@@ -55,10 +55,7 @@ Sequence.prototype = {
 		if(previousIndex === null) {
 			// sequence already not happening
 		}
-		else if(!noteHeld && !this.hasLoop) {
-			// no loop means instant note-off
-		}
-		else if(noteHeld && this.hasLoop && previousIndex === this.loopStopIndex) {
+		else if(noteHeld && this.hasLoop && previousIndex + 1 === this.loopStopIndex) {
 			// return to start of loop
 			result = this.loopStartIndex;
 		}
