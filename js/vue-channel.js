@@ -67,23 +67,23 @@ let instructionProperties = [
 	'fx0_type','fx0_high','fx0_low',
 ];
 
-let getInstruction = function(){
+let getInstruction = function(overrideChannel){
 	let editorState = app.editorState;
 	let projectState = app.projectState;
 	let activeSong = projectState.songs[editorState.activeSongIndex];
-	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][editorState.activeChannelIndex];
-	let activePattern = activeSong.patterns[editorState.activeChannelIndex][activePatternIndex];
+	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][overrideChannel || editorState.activeChannelIndex];
+	let activePattern = activeSong.patterns[overrideChannel || editorState.activeChannelIndex][activePatternIndex];
 	while(activePattern.length <= editorState.activeRowIndex) activePattern.push({});
 	let instruction = activePattern[editorState.activeRowIndex];
-	return instruction;
+	return JSON.parse(JSON.stringify(instruction)); // return a copy in case our caller decides to back out of changing the instruction
 };
-let updateInstruction = function(instruction){
+let updateInstruction = function(instruction, overrideChannel){
 	let editorState = app.editorState;
 	let projectState = app.projectState;
 	let activeSong = projectState.songs[editorState.activeSongIndex];
-	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][editorState.activeChannelIndex];
-	let activePattern = activeSong.patterns[editorState.activeChannelIndex][activePatternIndex];
-	activePattern.splice(editorState.activeRowIndex, 1, JSON.parse(JSON.stringify(instruction))); // welcome to the Web!
+	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][overrideChannel || editorState.activeChannelIndex];
+	let activePattern = activeSong.patterns[overrideChannel || editorState.activeChannelIndex][activePatternIndex];
+	activePattern.splice(editorState.activeRowIndex, 1, instruction); // welcome to the Web!
 };
 let eraseValue = function () {
 	let instruction = getInstruction();
@@ -116,6 +116,16 @@ let filterHexDigitKey = function(event) {
 	else
 		return false;
 };
+let applyAutoInstrument = function(instruction) {
+	if(!app.editorState.autoInstrument) return;
+	let index = app.projectState.instruments.indexOf(app.editorState.activeInstrument);
+	if(index >= 0) instruction.instrument = index;
+}
+let autoAdvance = function() {
+	if(app.editorState.autoAdvance && app.editorState.playbackState == 'paused') {
+		app.editorState.activeRowIndex = (app.editorState.activeRowIndex + 1) % app.projectState.songs[app.editorState.activeSongIndex].rows;
+	}
+}
 let noteLetterMap = {C:0, D:2, E:4, F:5, G:7, A:9, B:11};
 let octaveDigitMap = {Z:0, 0:12, 1:24, 2:36, 3:48, 4:60, 5:72, 6:84, 7:96, 8:108};
 // this is the highest note whose frequency can actually be inputted into the ET209
@@ -133,6 +143,20 @@ let keyFilterMap = {
 				else instruction.note = ((instruction.note << 4) | digit) & 255;
 				updateInstruction(instruction);
 				return true;
+			}
+			else if(event.key == ".") {
+				let instruction = getInstruction();
+				applyAutoInstrument(instruction);
+				let instrument;
+				if(instruction.instrument != null)
+					instrument = app.projectState.instruments[instruction.instrument];
+				else
+					instrument = app.editorState.activeInstrument;
+				if(instrument != null && instrument.autoperiod) {
+					instruction.note = instrument.autoperiod;
+					updateInstruction(instruction);
+					return true;
+				}
 			}
 		}
 		else {
@@ -152,9 +176,11 @@ let keyFilterMap = {
 				if(instruction.note === undefined
 				   || instruction.note === null
 				   || instruction.note === false) instruction.note = 60;
+				applyAutoInstrument(instruction);
 				instruction.note = octaveDigitMap[uppercase] + instruction.note % 12;
 				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
 				updateInstruction(instruction);
+				autoAdvance();
 				return true;
 			}
 			else if(event.key == "#") {
@@ -168,7 +194,7 @@ let keyFilterMap = {
 				return true;
 			}
 		}
-		if(event.key == ".") {
+		if(event.key == "x" || event.key == "X") {
 			let instruction = getInstruction();
 			instruction.note = false;
 			updateInstruction(instruction);
@@ -246,6 +272,21 @@ for(let n = 0; n < 3; ++n) {
 		}
 	};
 }
+let recordNoteOn = function(noteValue, channel) {
+	let instruction = getInstruction(channel);
+	applyAutoInstrument(instruction);
+	instruction.note = noteValue;
+	if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
+	updateInstruction(instruction, channel);
+	autoAdvance();
+};
+let recordNoteOff = function(channel) {
+	let instruction = getInstruction(channel);
+	instruction.instrument = undefined;
+	instruction.note = false;
+	updateInstruction(instruction, channel);
+	autoAdvance();
+};
 
 Vue.component(
 	'pattern-editor',
@@ -340,6 +381,12 @@ Vue.component(
 				@keydown.capture.right="moveRight"
 				@keydown="input"
 			>
+				<ul class="tab-list">
+					<prop-checkbox :source="editorState" prop="autoAdvance" name="Auto Advance" />
+					<prop-checkbox :source="editorState" prop="autoInstrument" name="Auto-Instrument" />
+					<prop-checkbox :source="editorState" prop="recordMIDI" name="Record MIDI" />
+					<prop-checkbox :source="editorState" prop="enablePolyphony" name="MIDI Polyphony" />
+				</ul>
 				<table>
 					<thead>
 						<th></th>
@@ -392,6 +439,27 @@ Vue.component(
 				<span class="checkbox"></span>
 				<span>{{channel.isNoise ? 'Noise' : ('Voice ' + (index+1))}}</span>
 			</button>
+		`
+	}
+);
+
+Vue.component(
+	'prop-checkbox',
+	{
+		props: {
+			source: Object,
+			prop: String,
+			name: String
+		},
+		template: `
+			<li class="noSelect buttons">
+				<button @click="source[prop] = !source[prop]"
+					:class="{active: source[prop]}"
+					>
+					<span class="checkbox"></span>
+					{{name}}
+				</button>
+			</li>
 		`
 	}
 );

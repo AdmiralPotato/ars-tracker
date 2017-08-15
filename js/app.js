@@ -17,7 +17,7 @@ let app = {
 		volume: 1,
 		onKeys: [],
 		activeInstrument: new Instrument(), // TODO: make this default to null
-		polyphonyChannels: [0, 1, 2, 3, 4, 5, 6],
+		polyphonyChannels: [0, 1, 2, 3, 4, 5, 6], // TODO: expose this array
 		polyphony: [{}, {}, {}, {}, {}, {}, {}, {}],
 		activeSongIndex: 0,
 		activeOrderIndex: 0,
@@ -26,7 +26,11 @@ let app = {
 		activeProperty: 'note',
 		speakerSetup: 'stereo',
 		playbackState: 'paused',
-		playbackStateOnLastPause: 'playSong'
+		playbackStateOnLastPause: 'playSong',
+		autoAdvance: true,
+		autoInstrument: true,
+		recordMIDI: false,
+		enablePolyphony: false,
 	},
 	projectState: {
 		instruments: [
@@ -51,9 +55,13 @@ let app = {
 			app.editorState.onKeys.push(keyIndex);
 			channels[channelIndex].setActiveInstrument(instrument);
 			channels[channelIndex].noteOn(keyIndex);
+			if(app.editorState.recordMIDI) {
+				recordNoteOn(keyIndex, channelIndex);
+			}
 		}
 	},
 	getNextAvailableChannelIndex: function () {
+		if(!app.editorState.enablePolyphony) return app.editorState.activeChannelIndex;
 		let oldestSilentChannel = null;
 		let oldestSilentChannelTime = null;
 		let oldestActiveChannel = null;
@@ -95,6 +103,9 @@ let app = {
 				found = true;
 				channels[i].noteOff();
 				polyphony[i].noteIndex = null;
+				if(app.editorState.recordMIDI) {
+					recordNoteOff(i);
+				}
 			}
 		}
 	},
