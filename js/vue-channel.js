@@ -134,7 +134,6 @@ Vue.component(
 				this.editorState.activeRowIndex = rowIndex;
 				this.editorState.activeChannelIndex = channelIndex;
 				this.editorState.activeProperty = property;
-				this.$forceUpdate();
 			},
 			moveUp:    function(e){this.moveCursorRelative(e,  0, -1);},
 			moveDown:  function(e){this.moveCursorRelative(e,  0,  1);},
@@ -167,9 +166,6 @@ Vue.component(
 			},
 			wrapRange: function(n, max){
 				return (n + max) % max;
-			},
-			getActiveStateByRowAndChannel(rowIndex, channelIndex){
-				return this.editorState.activeRowIndex === rowIndex && this.editorState.activeChannelIndex === channelIndex;
 			}
 		},
 		template: `
@@ -182,6 +178,7 @@ Vue.component(
 				@keydown.capture.right="moveRight"
 				@keydown="input"
 			>
+				<editor-state-styling :editorState="editorState" />
 				<table>
 					<thead>
 						<th></th>
@@ -200,14 +197,10 @@ Vue.component(
 					<tbody>
 						<tr
 							v-for="(row, rowIndex) in tableRows"
-							@click="editorState.activeRowIndex = rowIndex"
-							:class="{active: editorState.activeRowIndex === rowIndex}"
 							>
 							<th>row {{formatByte(rowIndex)}}</th>
 							<td v-for="(instruction, channelIndex) in row">
 								<instruction-editor
-									:isActive="getActiveStateByRowAndChannel(rowIndex, channelIndex)"
-									:activeProperty="editorState.activeProperty"
 									:isNoise="channels[channelIndex].isNoise"
 									:instruction="instruction"
 									:setActive="function(property){setActive(rowIndex, channelIndex, property)}"
@@ -217,6 +210,36 @@ Vue.component(
 					</tbody>
 				</table>
 			</div>
+		`
+	}
+);
+
+Vue.component(
+	'editor-state-styling',
+	{
+		props: {
+			editorState: Object
+		},
+		computed: {
+			activeStyling: function(){
+				let editorState = this.editorState;
+				return `
+					<style>
+						.pattern-editor table tr:nth-child(0n+${editorState.activeRowIndex + 1}){
+							background-color: #226;
+						}
+						.pattern-editor table
+						tr:nth-of-type(0n+${editorState.activeRowIndex + 1})
+						td:nth-of-type(0n+${editorState.activeChannelIndex + 1})
+						.entry.${editorState.activeProperty}{
+							background-color: #264;
+						}
+					</style>
+				`;
+			}
+		},
+		template: `
+				<div class="editor-state-styling" v-html="activeStyling"></div>
 		`
 	}
 );

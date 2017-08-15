@@ -67,10 +67,10 @@ Vue.component(
 		},
 		template: `
 			<div class="instruction-editor">
-				<table-input :activeProperty="isActive ? activeProperty : ''" :setActive="setActive" name="note"       :value="note"       class="entry" :class="isNoise ? 'c2' : 'c3'" />
-				<table-input :activeProperty="isActive ? activeProperty : ''" :setActive="setActive" name="instrument" :value="instrument" class="entry c2" />
-				<table-input :activeProperty="isActive ? activeProperty : ''" :setActive="setActive" name="volume"     :value="volume"     class="entry c1" />
-				<table-input :activeProperty="isActive ? activeProperty : ''" :setActive="setActive" name="fx0"        :value="fx0"        class="entry c3" />
+				<table-input :setActive="setActive" name="note"       :value="note"       class="entry" :class="isNoise ? 'c2' : 'c3'" />
+				<table-input :setActive="setActive" name="instrument" :value="instrument" class="entry c2" />
+				<table-input :setActive="setActive" name="volume"     :value="volume"     class="entry c1" />
+				<table-input :setActive="setActive" name="fx0"        :value="fx0"        class="entry c3" />
 			</div>
 		`
 	}
@@ -82,8 +82,7 @@ Vue.component(
 		props: {
 			name: String,
 			value: [String, Number],
-			setActive: Function,
-			activeProperty: String
+			setActive: Function
 		},
 		methods: {
 			click: function () {
@@ -92,9 +91,9 @@ Vue.component(
 		},
 		template: `
 			<span
+				:class="name"
 				@click="click"
 				:title="name"
-				:class="{active: activeProperty === name}"
 			>{{value}}</span>
 		`
 	}
