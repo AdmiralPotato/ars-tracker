@@ -383,6 +383,8 @@ Vue.component(
 						.pattern-editor table
 						tr:nth-of-type(0n+${editorState.activeRowIndex + 1})
 						td:nth-of-type(0n+${editorState.activeChannelIndex + 1})
+						.instruction-editor
+						.property
 						.entry.${editorState.activeProperty}{
 							background-color: #264;
 						}

@@ -210,11 +210,18 @@ ul.tab-list li a{
 .instruction-editor .property{
 	border-right: 1px solid #333;
 	text-align: center;
+	white-space: no-wrap;
 	display: flex;
 }
+.instruction-editor .property:last-of-type{
+	border-right: none;
+}
+.instruction-editor .property.c1{width:2ch}
+.instruction-editor .property.c2{width:3ch}
+.instruction-editor .property.c3{width:4ch}
 .instruction-editor .property .entry:first-of-type{
-	padding-left: 0.15em;
+	padding-left: 0.5ch;
 }
 .instruction-editor .property .entry:last-of-type{
-	padding-right: 0.15em;
+	padding-right: 0.5ch;
 }

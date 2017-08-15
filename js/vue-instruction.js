@@ -71,17 +71,17 @@ Vue.component(
 		},
 		template: `
 			<div class="instruction-editor">
-				<span class="property">
+				<span class="property c3">
 					<table-input :setActive="setActive" name="note"            :value="note"          />
 				</span>
-				<span class="property">
+				<span class="property c2">
 					<table-input :setActive="setActive" name="instrument_high" :value="instrument[0]" />
 					<table-input :setActive="setActive" name="instrument_low"  :value="instrument[1]" />
 				</span>
-				<span class="property">
+				<span class="property c1">
 					<table-input :setActive="setActive" name="volume"          :value="volume"        />
 				</span>
-				<span class="property">
+				<span class="property c3">
 					<table-input :setActive="setActive" name="fx0_type"        :value="fx0[0]"        />
 					<table-input :setActive="setActive" name="fx0_high"        :value="fx0[1]"        />
 					<table-input :setActive="setActive" name="fx0_low"         :value="fx0[2]"        />
