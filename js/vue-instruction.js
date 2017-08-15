@@ -67,7 +67,7 @@ Vue.component(
 		},
 		template: `
 			<div class="instruction-editor">
-				<table-input :setActive="setActive" name="note"       :value="note"       class="entry" :class="isNoise ? 'c2' : 'c3'" />
+				<table-input :setActive="setActive" name="note"       :value="note"       class="entry c3" />
 				<table-input :setActive="setActive" name="instrument" :value="instrument" class="entry c2" />
 				<table-input :setActive="setActive" name="volume"     :value="volume"     class="entry c1" />
 				<table-input :setActive="setActive" name="fx0"        :value="fx0"        class="entry c3" />
