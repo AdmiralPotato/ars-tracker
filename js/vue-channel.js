@@ -62,9 +62,9 @@ Vue.component(
 
 let instructionProperties = [
 	'note',
-	'instrument',
+	'instrument_high','instrument_low',
 	'volume',
-	'fx0',
+	'fx0_type','fx0_high','fx0_low',
 ];
 
 let getInstruction = function(){
@@ -107,7 +107,8 @@ let filterHexDigitKey = function(event) {
 };
 let noteLetterMap = {C:0, D:2, E:4, F:5, G:7, A:9, B:11};
 let octaveDigitMap = {Z:0, 0:12, 1:24, 2:36, 3:48, 4:60, 5:72, 6:84, 7:96, 8:108};
-let MAXIMUM_VOICE_NOTE = 108; // this can be stretched SLIGHTLY if the playback engine is modified
+// this is the highest note whose frequency can actually be inputted into the ET209
+let maximum_voice_note = 114;
 // filters return true if they fully handled the keypress
 let keyFilterMap = {
 	'note':function(event){
@@ -131,7 +132,7 @@ let keyFilterMap = {
 				   || instruction.note === null
 				   || instruction.note === false) instruction.note = 60;
 				instruction.note = (instruction.note - instruction.note % 12) + noteLetterMap[uppercase];
-				if(instruction.note > MAXIMUM_VOICE_NOTE) instruction.note = MAXIMUM_VOICE_NOTE;
+				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
 				updateInstruction(instruction);
 				return true;
 			}
@@ -141,7 +142,7 @@ let keyFilterMap = {
 				   || instruction.note === null
 				   || instruction.note === false) instruction.note = 60;
 				instruction.note = octaveDigitMap[uppercase] + instruction.note % 12;
-				if(instruction.note > MAXIMUM_VOICE_NOTE) instruction.note = MAXIMUM_VOICE_NOTE;
+				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
 				updateInstruction(instruction);
 				return true;
 			}
@@ -151,7 +152,7 @@ let keyFilterMap = {
 				   || instruction.note === null
 				   || instruction.note === false) return false;
 				++instruction.note;
-				if(instruction.note > MAXIMUM_VOICE_NOTE) instruction.note = MAXIMUM_VOICE_NOTE;
+				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
 				updateInstruction(instruction);
 				return true;
 			}
@@ -169,12 +170,22 @@ let keyFilterMap = {
 			return true;
 		}
 	},
-	'instrument':function(event){
+	'instrument_high':function(event){
+		let digit = filterHexDigitKey(event);
+		if(digit !== false) {
+			let instruction = getInstruction();
+			if(instruction.instrument === undefined) instruction.instrument = digit << 4;
+			else instruction.instrument = (instruction.instrument & 0xF) | (digit << 4);
+			updateInstruction(instruction);
+			return true;
+		}
+	},
+	'instrument_low':function(event){
 		let digit = filterHexDigitKey(event);
 		if(digit !== false) {
 			let instruction = getInstruction();
 			if(instruction.instrument === undefined) instruction.instrument = digit;
-			else instruction.instrument = ((instruction.instrument << 4) | digit) & 255;
+			else instruction.instrument = (instruction.instrument & 0xF0) | digit;
 			updateInstruction(instruction);
 			return true;
 		}
@@ -188,9 +199,42 @@ let keyFilterMap = {
 			return true;
 		}
 	},
-	'fx0':function(event){
-	},
 };
+for(let n = 0; n < 3; ++n) {
+	let effectIndex = n;
+	keyFilterMap["fx"+n+"_type"] = function(event){
+		let uppercase = event.key.toUpperCase();
+		if(letter_to_effect_name[uppercase]) {
+			let instruction = getInstruction();
+			if(instruction.fx == undefined) instruction.fx = [];
+			while(instruction.fx.length < effectIndex) instruction.fx.push(null);
+			if(instruction.fx[effectIndex] == undefined) instruction.fx[effectIndex] = {value:0};
+			instruction.fx[effectIndex].type = letter_to_effect_name[uppercase];
+			updateInstruction(instruction);
+			return true;
+		}
+	};
+	keyFilterMap["fx"+n+"_high"] = function(event){
+		let digit = filterHexDigitKey(event);
+		if(digit !== false) {
+			let instruction = getInstruction();
+			if(instruction.fx == undefined || instruction.fx[effectIndex] == undefined) return false;
+			instruction.fx[effectIndex].value = (instruction.fx[effectIndex].value & 0xF) | (digit << 4)
+			updateInstruction(instruction);
+			return true;
+		}
+	};
+	keyFilterMap["fx"+n+"_low"] = function(event){
+		let digit = filterHexDigitKey(event);
+		if(digit !== false) {
+			let instruction = getInstruction();
+			if(instruction.fx == undefined || instruction.fx[effectIndex] == undefined) return false;
+			instruction.fx[effectIndex].value = (instruction.fx[effectIndex].value & 0xF0) | digit;
+			updateInstruction(instruction);
+			return true;
+		}
+	};
+}
 
 Vue.component(
 	'pattern-editor',
@@ -365,7 +409,7 @@ Vue.component(
 				:class="{active: activeChannels.indexOf(index) !== -1}"
 				@click="toggleChannel(index)">
 				<span class="checkbox"></span>
-				<span>{{channel.isNoise ? 'Noise' : ('Voice ' + (index+1))}}:{{channel.displayVolume&127}}</span>
+				<span>{{channel.isNoise ? 'Noise' : ('Voice ' + (index+1))}}</span>
 			</button>
 		`
 	}

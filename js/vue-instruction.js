@@ -13,6 +13,10 @@ let effect_name_to_letter = {
 	"tempo":"T",
 	"waveform":"V",
 };
+let letter_to_effect_name = {};
+for(let name in effect_name_to_letter) {
+	letter_to_effect_name[effect_name_to_letter[name]] = name
+}
 let note_value_for_display = function (value) {
 	if(value === false) return 'OFF';
 	else if(value === null) return 'CUT';
@@ -49,7 +53,7 @@ Vue.component(
 			},
 			fx0: function(){
 				return this.getFxByIndex(0);
-			}
+			},
 		},
 		methods: {
 			passthrough: function (propertyName, displayForEmpty, converter) {
@@ -67,10 +71,21 @@ Vue.component(
 		},
 		template: `
 			<div class="instruction-editor">
-				<table-input :setActive="setActive" name="note"       :value="note"       class="entry c3" />
-				<table-input :setActive="setActive" name="instrument" :value="instrument" class="entry c2" />
-				<table-input :setActive="setActive" name="volume"     :value="volume"     class="entry c1" />
-				<table-input :setActive="setActive" name="fx0"        :value="fx0"        class="entry c3" />
+				<span class="property">
+					<table-input :setActive="setActive" name="note"            :value="note"          />
+				</span>
+				<span class="property">
+					<table-input :setActive="setActive" name="instrument_high" :value="instrument[0]" />
+					<table-input :setActive="setActive" name="instrument_low"  :value="instrument[1]" />
+				</span>
+				<span class="property">
+					<table-input :setActive="setActive" name="volume"          :value="volume"        />
+				</span>
+				<span class="property">
+					<table-input :setActive="setActive" name="fx0_type"        :value="fx0[0]"        />
+					<table-input :setActive="setActive" name="fx0_high"        :value="fx0[1]"        />
+					<table-input :setActive="setActive" name="fx0_low"         :value="fx0[2]"        />
+				</span>
 			</div>
 		`
 	}
@@ -91,6 +106,7 @@ Vue.component(
 		},
 		template: `
 			<span
+				class="entry"
 				:class="name"
 				@click="click"
 				:title="name"

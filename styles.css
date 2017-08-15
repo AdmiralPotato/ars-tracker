@@ -201,18 +201,20 @@ ul.tab-list li a{
 	display: flex;
 	cursor: pointer;
 }
-.instruction-editor .entry{
-	padding: 0 0.125em;
-	text-align: center;
-	border-right: 1px solid #333;
-}
 .instruction-editor .entry.active {
 	background-color: #264;
 }
 .instruction-editor .entry:last-of-type{
 	border: none;
 }
-.instruction-editor .entry.c1{width: 1.5em;}
-.instruction-editor .entry.c2{width: 2em;}
-.instruction-editor .entry.c3{width: 2.5em;}
-.instruction-editor .entry.c4{width: 3em;}
+.instruction-editor .property{
+	border-right: 1px solid #333;
+	text-align: center;
+	display: flex;
+}
+.instruction-editor .property .entry:first-of-type{
+	padding-left: 0.15em;
+}
+.instruction-editor .property .entry:last-of-type{
+	padding-right: 0.15em;
+}
