@@ -17,7 +17,7 @@ let app = {
 		volume: 1,
 		onKeys: [],
 		activeInstrument: new Instrument(), // TODO: make this default to null
-		activeChannels: [0, 1, 2],
+		polyphonyChannels: [0, 1, 2, 3, 4, 5, 6],
 		polyphony: [{}, {}, {}, {}, {}, {}, {}, {}],
 		activeSongIndex: 0,
 		activeOrderIndex: 0,
@@ -57,9 +57,9 @@ let app = {
 		let oldestSilentChannelTime = null;
 		let oldestActiveChannel = null;
 		let oldestActiveChannelTime = null;
-		let activeChannels = app.editorState.activeChannels;
+		let polyphonyChannels = app.editorState.polyphonyChannels;
 		let polyphony = app.editorState.polyphony;
-		activeChannels.forEach(function (channelIndex) {
+		polyphonyChannels.forEach(function (channelIndex) {
 			let polyphonyNote = polyphony[channelIndex];
 			if(!polyphonyNote.noteIndex){
 				let isOnlyOrOldest = (

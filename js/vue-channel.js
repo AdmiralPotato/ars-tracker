@@ -269,12 +269,12 @@ Vue.component(
 		methods: {
 			formatByte: formatByte,
 			toggleChannel: function (channelIndex) {
-				let activeChannels = this.editorState.activeChannels;
-				let alreadyThere = activeChannels.indexOf(channelIndex) !== -1;
+				let polyphonyChannels = this.editorState.polyphonyChannels;
+				let alreadyThere = polyphonyChannels.indexOf(channelIndex) !== -1;
 				if(alreadyThere){
-					arrayRemove(activeChannels, channelIndex);
+					arrayRemove(polyphonyChannels, channelIndex);
 				} else {
-					activeChannels.push(channelIndex);
+					polyphonyChannels.push(channelIndex);
 				}
 			},
 			setActive: function (rowIndex, channelIndex, property) {
@@ -340,7 +340,6 @@ Vue.component(
 							<channel
 								:channel="item"
 								:index="index"
-								:activeChannels="editorState.activeChannels"
 								:toggleChannel="toggleChannel"
 								/>
 						</th>
@@ -374,13 +373,12 @@ Vue.component(
 		props: {
 			channel: Channel,
 			index: Number,
-			activeChannels: Array,
 			toggleChannel: Function
 		},
 		template: `
 			<button
-				:class="{active: activeChannels.indexOf(index) !== -1}"
-				@click="toggleChannel(index)">
+				:class="{active: !channel.isMuted}"
+				@click="channel.isMuted = !channel.isMuted">
 				<span class="checkbox"></span>
 				<span>{{channel.isNoise ? 'Noise' : ('Voice ' + (index+1))}}</span>
 			</button>
