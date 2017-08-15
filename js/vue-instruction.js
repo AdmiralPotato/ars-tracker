@@ -18,15 +18,15 @@ for(let name in effect_name_to_letter) {
 	letter_to_effect_name[effect_name_to_letter[name]] = name
 }
 let note_value_for_display = function (value) {
-	if(value === false) return 'OFF';
-	else if(value === null) return 'CUT';
-	else if(value !== undefined) { return note_value_names[value%12]+octave_names[Math.floor(value/12)]; }
+	if(value === 'off') return 'OFF';
+	else if(value === 'cut') return 'CUT';
+	else if(value !== null) { return note_value_names[value%12]+octave_names[Math.floor(value/12)]; }
 	else return '···';
 };
 let noise_value_for_display = function (value) {
-	if(value === false) return 'OFF';
-	else if(value === null) return 'CUT';
-	else if(value !== undefined) { return '$'+formatByte(value); }
+	if(value === 'off') return 'OFF';
+	else if(value === 'cut') return 'CUT';
+	else if(value !== null) { return '$'+formatByte(value); }
 	else return '···';
 };
 
@@ -57,10 +57,10 @@ Vue.component(
 		},
 		methods: {
 			passthrough: function (propertyName, displayForEmpty, converter) {
-				return this.instruction && this.instruction[propertyName] !== undefined ? converter ? converter(this.instruction[propertyName]) : this.instruction[propertyName] : displayForEmpty;
+				return this.instruction && this.instruction[propertyName] !== null ? converter ? converter(this.instruction[propertyName]) : this.instruction[propertyName] : displayForEmpty;
 			},
 			getFxByIndex: function (fxIndex) {
-				if(this.instruction === undefined || this.instruction.fx === undefined || !this.instruction.fx[fxIndex]) {
+				if(this.instruction === undefined || this.instruction.fx === null || !this.instruction.fx[fxIndex]) {
 					return '···';
 				}
 				else {

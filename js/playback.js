@@ -39,22 +39,22 @@ let playback = {
 			let pattern = song.patterns[channelIndex][order[channelIndex]];
 			let instruction = pattern[activeRowIndex];
 			if(instruction === undefined) return;
-			if(instruction.instrument !== undefined){
+			if(instruction.instrument !== null){
 				channel.setActiveInstrument(app.projectState.instruments[instruction.instrument]);
 			}
-			if(instruction.volume !== undefined){
+			if(instruction.volume !== null){
 				channel.setVolume(instruction.volume);
 			}
-			if(instruction.note === false){
+			if(instruction.note === 'off'){
 				channel.noteOff();
 			}
-			else if(instruction.note === null){
+			else if(instruction.note === 'cut'){
 				channel.noteCut();
 			}
-			else if(instruction.note !== undefined){
+			else if(instruction.note !== null){
 				channel.noteOn(instruction.note);
 			}
-			if(instruction.fx !== undefined) {
+			if(instruction.fx !== null) {
 				instruction.fx.forEach(function(pair) {
 					if(pair !== null) {
 						if(pair.type in playback._effectHandlers){

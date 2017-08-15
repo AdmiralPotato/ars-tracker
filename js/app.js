@@ -42,7 +42,7 @@ let app = {
 			speed: 6,
 			tempo: 150,
 			rows: 64,
-			patterns: [[[{}]],[[{}]],[[{}]],[[{}]],[[{}]],[[{}]],[[{}]],[[{}]]]
+			patterns: [[[]],[[]],[[]],[[]],[[]],[[]],[[]],[[]]]
 		}]
 	},
 	handleKeyOn: function(keyIndex){

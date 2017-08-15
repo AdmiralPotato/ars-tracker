@@ -73,17 +73,25 @@ let getInstruction = function(overrideChannel){
 	let activeSong = projectState.songs[editorState.activeSongIndex];
 	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][overrideChannel || editorState.activeChannelIndex];
 	let activePattern = activeSong.patterns[overrideChannel || editorState.activeChannelIndex][activePatternIndex];
-	while(activePattern.length <= editorState.activeRowIndex) activePattern.push({});
+	while(activePattern.length < activeSong.rows) {
+		activePattern.push(hydration.newEmptyInstruction());
+	}
 	let instruction = activePattern[editorState.activeRowIndex];
 	return JSON.parse(JSON.stringify(instruction)); // return a copy in case our caller decides to back out of changing the instruction
 };
-let updateInstruction = function(instruction, overrideChannel){
+let updateInstruction = function(newInstruction, overrideChannel){
 	let editorState = app.editorState;
 	let projectState = app.projectState;
 	let activeSong = projectState.songs[editorState.activeSongIndex];
 	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][overrideChannel || editorState.activeChannelIndex];
 	let activePattern = activeSong.patterns[overrideChannel || editorState.activeChannelIndex][activePatternIndex];
-	activePattern.splice(editorState.activeRowIndex, 1, instruction); // welcome to the Web!
+	let oldInstruction = activePattern[editorState.activeRowIndex];
+	for(let prop in newInstruction) {
+		// in practice, this will always update a non-null fx
+		if(oldInstruction[prop] != newInstruction[prop]) {
+			oldInstruction[prop] = newInstruction[prop];
+		}
+	}
 };
 let eraseValue = function () {
 	let instruction = getInstruction();
@@ -93,7 +101,7 @@ let eraseValue = function () {
 		instruction.fx[fxIndex] = null;
 		instruction.fx = instruction.fx.slice();
 	} else {
-		instruction[property] = undefined;
+		instruction[property] = null;
 	}
 };
 let togglePlayback = function() {
@@ -137,9 +145,9 @@ let keyFilterMap = {
 			let digit = filterHexDigitKey(event);
 			if(digit !== false) {
 				let instruction = getInstruction();
-				if(instruction.note === undefined) instruction.note = digit;
-				else if(instruction.note === null) instruction.note = digit;
-				else if(instruction.note === false) instruction.note = digit;
+				if(instruction.note === null
+				   || instruction.note === 'cut'
+				   || instruction.note === 'off') instruction.note = digit;
 				else instruction.note = ((instruction.note << 4) | digit) & 255;
 				updateInstruction(instruction);
 				return true;
@@ -163,9 +171,9 @@ let keyFilterMap = {
 			let uppercase = event.key.toUpperCase();
 			if(uppercase in noteLetterMap) {
 				let instruction = getInstruction();
-				if(instruction.note === undefined
-				   || instruction.note === null
-				   || instruction.note === false) instruction.note = 60;
+				if(instruction.note === null
+				   || instruction.note === 'cut'
+				   || instruction.note === 'off') instruction.note = 60;
 				instruction.note = (instruction.note - instruction.note % 12) + noteLetterMap[uppercase];
 				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
 				updateInstruction(instruction);
@@ -173,9 +181,9 @@ let keyFilterMap = {
 			}
 			else if(uppercase in octaveDigitMap) {
 				let instruction = getInstruction();
-				if(instruction.note === undefined
-				   || instruction.note === null
-				   || instruction.note === false) instruction.note = 60;
+				if(instruction.note === null
+				   || instruction.note === 'cut'
+				   || instruction.note === 'off') instruction.note = 60;
 				applyAutoInstrument(instruction);
 				instruction.note = octaveDigitMap[uppercase] + instruction.note % 12;
 				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
@@ -185,9 +193,9 @@ let keyFilterMap = {
 			}
 			else if(event.key == "#") {
 				let instruction = getInstruction();
-				if(instruction.note === undefined
-				   || instruction.note === null
-				   || instruction.note === false) return false;
+				if(instruction.note === null
+				   || instruction.note === 'cut'
+				   || instruction.note === 'off') return false;
 				++instruction.note;
 				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
 				updateInstruction(instruction);
@@ -196,13 +204,13 @@ let keyFilterMap = {
 		}
 		if(event.key == "x" || event.key == "X") {
 			let instruction = getInstruction();
-			instruction.note = false;
+			instruction.note = 'off';
 			updateInstruction(instruction);
 			return true;
 		}
 		else if(event.key == "\\") {
 			let instruction = getInstruction();
-			instruction.note = null;
+			instruction.note = 'cut';
 			updateInstruction(instruction);
 			return true;
 		}
@@ -211,7 +219,7 @@ let keyFilterMap = {
 		let digit = filterHexDigitKey(event);
 		if(digit !== false) {
 			let instruction = getInstruction();
-			if(instruction.instrument === undefined) instruction.instrument = digit << 4;
+			if(instruction.instrument === null) instruction.instrument = digit << 4;
 			else instruction.instrument = (instruction.instrument & 0xF) | (digit << 4);
 			updateInstruction(instruction);
 			return true;
@@ -221,7 +229,7 @@ let keyFilterMap = {
 		let digit = filterHexDigitKey(event);
 		if(digit !== false) {
 			let instruction = getInstruction();
-			if(instruction.instrument === undefined) instruction.instrument = digit;
+			if(instruction.instrument === null) instruction.instrument = digit;
 			else instruction.instrument = (instruction.instrument & 0xF0) | digit;
 			updateInstruction(instruction);
 			return true;
@@ -243,7 +251,7 @@ for(let n = 0; n < 3; ++n) {
 		let uppercase = event.key.toUpperCase();
 		if(letter_to_effect_name[uppercase]) {
 			let instruction = getInstruction();
-			if(instruction.fx == undefined) instruction.fx = [];
+			if(instruction.fx == null) instruction.fx = [];
 			while(instruction.fx.length < effectIndex) instruction.fx.push(null);
 			if(instruction.fx[effectIndex] == undefined) instruction.fx[effectIndex] = {value:0};
 			instruction.fx[effectIndex].type = letter_to_effect_name[uppercase];
@@ -255,7 +263,7 @@ for(let n = 0; n < 3; ++n) {
 		let digit = filterHexDigitKey(event);
 		if(digit !== false) {
 			let instruction = getInstruction();
-			if(instruction.fx == undefined || instruction.fx[effectIndex] == undefined) return false;
+			if(instruction.fx == null || instruction.fx[effectIndex] == undefined) return false;
 			instruction.fx[effectIndex].value = (instruction.fx[effectIndex].value & 0xF) | (digit << 4)
 			updateInstruction(instruction);
 			return true;
@@ -265,7 +273,7 @@ for(let n = 0; n < 3; ++n) {
 		let digit = filterHexDigitKey(event);
 		if(digit !== false) {
 			let instruction = getInstruction();
-			if(instruction.fx == undefined || instruction.fx[effectIndex] == undefined) return false;
+			if(instruction.fx == null || instruction.fx[effectIndex] == undefined) return false;
 			instruction.fx[effectIndex].value = (instruction.fx[effectIndex].value & 0xF0) | digit;
 			updateInstruction(instruction);
 			return true;
@@ -282,8 +290,8 @@ let recordNoteOn = function(noteValue, channel) {
 };
 let recordNoteOff = function(channel) {
 	let instruction = getInstruction(channel);
-	instruction.instrument = undefined;
-	instruction.note = false;
+	instruction.instrument = null;
+	instruction.note = 'off';
 	updateInstruction(instruction, channel);
 	autoAdvance();
 };
@@ -308,6 +316,10 @@ Vue.component(
 					let patternRows = patterns[channelIndex][channelOrderIndex];
 					for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
 						let instruction = patternRows[rowIndex];
+						if(instruction == undefined) {
+							instruction = hydration.newEmptyInstruction();
+							patternRows.push(instruction);
+						}
 						if(!rows[rowIndex]){
 							rows[rowIndex] = [];
 						}

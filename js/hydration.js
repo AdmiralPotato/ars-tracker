@@ -4,10 +4,19 @@ let hydration = {
 	rleDecodePattern: function(inputPattern){
 		let result = [];
 		inputPattern.forEach(function(run){
+			if(run.note === false) run.note = 'off';
+			else if(run.note === null) run.note = 'cut';
+			else if(run.note === undefined) run.note = null;
+			if(run.instrument === undefined) run.instrument = null;
+			if(run.volume === undefined) run.volume = null;
+			if(run.fx === undefined) run.fx = null;
 			let expandedRun = app.repeatCopy(run);
 			result.push.apply(result, expandedRun);
 		});
 		return result;
+	},
+	newEmptyInstruction: function() {
+		return {note:null,volume:null,instrument:null,fx:null};
 	},
 	hydrate: function (state) {
 		// turn instruments into objects
@@ -24,7 +33,7 @@ let hydration = {
 					return channel.map(function (rlePattern) {
 						let rleDecodedPattern = hydration.rleDecodePattern(rlePattern);
 						while(rleDecodedPattern.length < song.rows) {
-							rleDecodedPattern.push({});
+							rleDecodedPattern.push(hydration.newEmptyInstruction());
 						}
 						return rleDecodedPattern;
 					});
@@ -53,6 +62,19 @@ let hydration = {
 		dehydrated.songs.forEach(function (song) {
 			song.patterns.forEach(function (channel) {
 				channel.forEach(function (pattern) {
+					pattern.forEach(function (instruction) {
+						if(instruction.note === null) delete instruction.note;
+						else if(instruction.note == 'off') instruction.note = false;
+						else if(instruction.note == 'cut') instruction.note = null;
+						if(instruction.instrument === null) delete instruction.instrument;
+						if(instruction.volume === null) delete instruction.volume;
+						if(instruction.fx !== null) {
+							while(instruction.fx.length > 0 && instruction.fx[instruction.fx.length] === null) {
+								delete instruction.fx[instruction.fx.length];
+							}
+						}
+						if(instruction.fx === null || instruction.fx.length == 0) delete instruction.fx;
+					});
 					let n = 0;
 					let currentString = null;
 					let nextString = JSON.stringify(pattern[n]);
