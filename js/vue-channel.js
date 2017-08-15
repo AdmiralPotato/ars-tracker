@@ -67,17 +67,27 @@ let instructionProperties = [
 	'fx0',
 ];
 
-let getInstruction = function(editor){
-	let state = editor.editorState;
-	let channelOrderIndex = editor.activeOrder[state.activeChannelIndex];
-	let patternRows = editor.patterns[state.activeChannelIndex][channelOrderIndex];
-	let instruction = patternRows[state.activeRowIndex];
+let getInstruction = function(){
+	let editorState = app.editorState;
+	let projectState = app.projectState;
+	let activeSong = projectState.songs[editorState.activeSongIndex];
+	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][editorState.activeChannelIndex];
+	let activePattern = activeSong.patterns[editorState.activeChannelIndex][activePatternIndex];
+	let instruction = activePattern[editorState.activeRowIndex];
 	return instruction;
 };
-let eraseValue = function (editor) {
-	let instruction = getInstruction(editor);
-	let property = editor.editorState.activeProperty;
-	if(property.indexOf('fx') === 0){
+let updateInstruction = function(instruction){
+	let editorState = app.editorState;
+	let projectState = app.projectState;
+	let activeSong = projectState.songs[editorState.activeSongIndex];
+	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][editorState.activeChannelIndex];
+	let activePattern = activeSong.patterns[editorState.activeChannelIndex][activePatternIndex];
+	activePattern.splice(editorState.activeRowIndex, 1, JSON.parse(JSON.stringify(instruction))); // welcome to the Web!
+};
+let eraseValue = function () {
+	let instruction = getInstruction();
+	let property = app.editorState.activeProperty;
+	if(property.startsWith('fx')){
 		let fxIndex = parseInt(property.substring(2), 10);
 		instruction.fx[fxIndex] = null;
 		instruction.fx = instruction.fx.slice();
@@ -88,6 +98,98 @@ let eraseValue = function (editor) {
 let keyHandlerMap = {
 	'Backspace': eraseValue,
 	'Delete': eraseValue,
+};
+let filterHexDigitKey = function(event) {
+	if(event.key.match(/^[0-9A-Fa-f]$/))
+		return parseInt(event.key, 16);
+	else
+		return false;
+};
+let noteLetterMap = {C:0, D:2, E:4, F:5, G:7, A:9, B:11};
+let octaveDigitMap = {Z:0, 0:12, 1:24, 2:36, 3:48, 4:60, 5:72, 6:84, 7:96, 8:108};
+let MAXIMUM_VOICE_NOTE = 108; // this can be stretched SLIGHTLY if the playback engine is modified
+// filters return true if they fully handled the keypress
+let keyFilterMap = {
+	'note':function(event){
+		if(channels[app.editorState.activeChannelIndex].isNoise) {
+			let digit = filterHexDigitKey(event);
+			if(digit !== false) {
+				let instruction = getInstruction();
+				if(instruction.note === undefined) instruction.note = digit;
+				else if(instruction.note === null) instruction.note = digit;
+				else if(instruction.note === false) instruction.note = digit;
+				else instruction.note = ((instruction.note << 4) | digit) & 255;
+				updateInstruction(instruction);
+				return true;
+			}
+		}
+		else {
+			let uppercase = event.key.toUpperCase();
+			if(uppercase in noteLetterMap) {
+				let instruction = getInstruction();
+				if(instruction.note === undefined
+				   || instruction.note === null
+				   || instruction.note === false) instruction.note = 60;
+				instruction.note = (instruction.note - instruction.note % 12) + noteLetterMap[uppercase];
+				if(instruction.note > MAXIMUM_VOICE_NOTE) instruction.note = MAXIMUM_VOICE_NOTE;
+				updateInstruction(instruction);
+				return true;
+			}
+			else if(uppercase in octaveDigitMap) {
+				let instruction = getInstruction();
+				if(instruction.note === undefined
+				   || instruction.note === null
+				   || instruction.note === false) instruction.note = 60;
+				instruction.note = octaveDigitMap[uppercase] + instruction.note % 12;
+				if(instruction.note > MAXIMUM_VOICE_NOTE) instruction.note = MAXIMUM_VOICE_NOTE;
+				updateInstruction(instruction);
+				return true;
+			}
+			else if(event.key == "#") {
+				let instruction = getInstruction();
+				if(instruction.note === undefined
+				   || instruction.note === null
+				   || instruction.note === false) return false;
+				++instruction.note;
+				if(instruction.note > MAXIMUM_VOICE_NOTE) instruction.note = MAXIMUM_VOICE_NOTE;
+				updateInstruction(instruction);
+				return true;
+			}
+		}
+		if(event.key == ".") {
+			let instruction = getInstruction();
+			instruction.note = false;
+			updateInstruction(instruction);
+			return true;
+		}
+		else if(event.key == "\\") {
+			let instruction = getInstruction();
+			instruction.note = null;
+			updateInstruction(instruction);
+			return true;
+		}
+	},
+	'instrument':function(event){
+		let digit = filterHexDigitKey(event);
+		if(digit !== false) {
+			let instruction = getInstruction();
+			if(instruction.instrument === undefined) instruction.instrument = digit;
+			else instruction.instrument = ((instruction.instrument << 4) | digit) & 255;
+			updateInstruction(instruction);
+			return true;
+		}
+	},
+	'volume':function(event){
+		let digit = filterHexDigitKey(event);
+		if(digit !== false) {
+			let instruction = getInstruction();
+			instruction.volume = digit;
+			updateInstruction(instruction);
+			return true;
+		}
+	},
+	'fx0':function(event){
+	},
 };
 
 Vue.component(
@@ -157,11 +259,16 @@ Vue.component(
 				);
 			},
 			input: function (keydownEvent) {
+				let filter = keyFilterMap[app.editorState.activeProperty];
+				if(filter && filter(keydownEvent)) {
+					// The filter handled the
+					keydownEvent.preventDefault();
+					return;
+				}
 				let handler = keyHandlerMap[keydownEvent.key];
 				if(handler){
 					keydownEvent.preventDefault();
-					handler(this);
-					console.log(keydownEvent.key);
+					handler(keydownEvent);
 				}
 			},
 			wrapRange: function(n, max){
