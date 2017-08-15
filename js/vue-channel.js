@@ -73,6 +73,7 @@ let getInstruction = function(){
 	let activeSong = projectState.songs[editorState.activeSongIndex];
 	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][editorState.activeChannelIndex];
 	let activePattern = activeSong.patterns[editorState.activeChannelIndex][activePatternIndex];
+	while(activePattern.length <= editorState.activeRowIndex) activePattern.push({});
 	let instruction = activePattern[editorState.activeRowIndex];
 	return instruction;
 };
