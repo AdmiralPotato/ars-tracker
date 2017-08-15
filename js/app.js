@@ -165,13 +165,6 @@ let app = {
 };
 
 app.startAudio();
-let testProjects = [
-	'MrOlivia.json',
-	'encounter.json',
-	'HuntWork.json',
-	'Yesterday.json'
-];
-app.loadProject('https://gist.githubusercontent.com/SolraBizna/4e44ef4dce1080fb844ff6cf8b1f2492/raw/f1ebcbf17ebe79acfc90d8c5f888f76258009d6a/' + testProjects[0]);
 
 app.vue = new Vue({
 	el: '#appTarget',
