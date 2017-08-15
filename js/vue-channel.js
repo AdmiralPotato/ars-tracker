@@ -87,7 +87,7 @@ let updateInstruction = function(instruction){
 };
 let eraseValue = function () {
 	let instruction = getInstruction();
-	let property = app.editorState.activeProperty;
+	let property = app.editorState.activeProperty.match(/^[^_]*/)[0];
 	if(property.startsWith('fx')){
 		let fxIndex = parseInt(property.substring(2), 10);
 		instruction.fx[fxIndex] = null;
