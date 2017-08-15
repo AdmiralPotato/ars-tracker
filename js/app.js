@@ -13,6 +13,7 @@ let getLastValueInArray = function (array) {
 
 let app = {
 	editorState: {
+		projectFileName: 'super_hella_sweet_project.json',
 		volume: 1,
 		onKeys: [],
 		activeInstrument: new Instrument(), // TODO: make this default to null
@@ -129,11 +130,21 @@ let app = {
 		let request = new XMLHttpRequest();
 		request.responseType = 'json';
 		request.addEventListener('load', function () {
-			app.vue.projectState = app.projectState = hydration.hydrate(request.response);
-			app.editorState.activeInstrument = app.projectState.instruments[0];
+			app.editorState.projectFileName = projectAddress.split('/').pop();
+			app.setProjectState(request.response);
 		});
 		request.open('get', projectAddress, true);
 		request.send();
+	},
+	setProjectState: function(projectState){
+		app.vue.changePlaybackState('paused');
+		app.vue.projectState = app.projectState = hydration.hydrate(projectState);
+		app.editorState.activeInstrument = app.projectState.instruments[0];
+		app.editorState.activeSongIndex = 0;
+		app.editorState.activeOrderIndex = 0;
+		app.editorState.activeRowIndex = 0;
+		app.editorState.activeChannelIndex = 0;
+		app.editorState.activeProperty = 'note';
 	},
 	repeatCopy: function (source) {
 		let copies = source.repeat || 1;
@@ -206,6 +217,10 @@ app.vue = new Vue({
 	template: `
 		<div>
 			<h1>ARS-Tracker</h1>
+			<io
+				:editorState="editorState"
+				:projectState="projectState"
+				/>
 			<song
 				:song="projectState.songs[editorState.activeSongIndex]"
 				:editorState="editorState"

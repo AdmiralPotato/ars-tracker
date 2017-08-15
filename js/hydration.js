@@ -36,7 +36,7 @@ let hydration = {
 	},
 	dehydrate: function (state) {
 		// Is this REALLY the fastest way to make an unobserved deep copy of an object? @_@
-		var dehydrated = JSON.parse(JSON.stringify(state));
+		let dehydrated = JSON.parse(JSON.stringify(state));
 		dehydrated.instruments.forEach(function (instrument) {
 			// type="voice" and autoperiod="null" can be assumed
 			if(instrument.type === "voice") {
@@ -78,4 +78,4 @@ let hydration = {
 		// Our caller can JSON.stringify if they want, or not if they don't.
 		return dehydrated;
 	},
-}
+};
