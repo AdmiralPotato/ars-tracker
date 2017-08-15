@@ -53,7 +53,8 @@ Channel.prototype = {
 	},
 	forgetFX: function() {
 		this.panBits = 0;
-		this.hwsliteBits = 0;
+		this.hwslideBits = 0;
+		this.volume = 15;
 	},
 	setActiveInstrument: function(instrument) {
 		this.instrument = instrument;
