@@ -96,9 +96,19 @@ let eraseValue = function () {
 		instruction[property] = undefined;
 	}
 };
+let togglePlayback = function() {
+	if(app.editorState.playbackState == 'paused') {
+		app.vue.changePlaybackState(app.editorState.playbackStateOnLastPause || 'playSong');
+	}
+	else {
+		app.vue.changePlaybackState('paused');
+	}
+	event.preventDefault();
+};
 let keyHandlerMap = {
 	'Backspace': eraseValue,
 	'Delete': eraseValue,
+	' ': togglePlayback,
 };
 let filterHexDigitKey = function(event) {
 	if(event.key.match(/^[0-9A-Fa-f]$/))

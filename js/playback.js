@@ -110,4 +110,28 @@ let playback = {
 			playback.tempo = param;
 		},
 	},
+	keyHandlerMap: {
+		"F5":function() {
+			app.vue.changePlaybackState('playSong');
+		},
+		"F6":function() {
+			app.vue.changePlaybackState('loopOrder');
+		},
+		"F7":function() {
+			app.editorState.activeRowIndex = 0;
+			app.vue.changePlaybackState('playSong');
+		},
+		"F8":function() {
+			app.editorState.activeRowIndex = 0;
+			app.vue.changePlaybackState('loopOrder');
+		},
+	},
+	keydown: function(event) {
+		if(event.key in playback.keyHandlerMap) {
+			playback.keyHandlerMap[event.key](event);
+			event.preventDefault();
+		}
+	},
 };
+
+document.body.addEventListener('keydown', playback.keydown);

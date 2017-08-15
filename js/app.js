@@ -25,7 +25,8 @@ let app = {
 		activeChannelIndex: 0,
 		activeProperty: 'note',
 		speakerSetup: 'stereo',
-		playbackState: 'paused'
+		playbackState: 'paused',
+		playbackStateOnLastPause: 'playSong'
 	},
 	projectState: {
 		instruments: [
@@ -196,6 +197,9 @@ app.vue = new Vue({
 			}
 		},
 		changePlaybackState: function (playbackState) {
+			if(app.editorState.playbackState != 'paused' && playbackState == 'paused') {
+				app.editorState.playbackStateOnLastPause = app.editorState.playbackState;
+			}
 			playback.playbackStateDidChange(app.editorState.playbackState, playbackState);
 			this.changeValueByName('playbackState', playbackState);
 		},
