@@ -393,6 +393,7 @@ Vue.component(
 				@keydown.capture.right="moveRight"
 				@keydown="input"
 			>
+				<editor-state-styling :editorState="editorState" />
 				<ul class="tab-list">
 					<prop-checkbox :source="editorState" prop="autoAdvance" name="Auto Advance" />
 					<prop-checkbox :source="editorState" prop="autoInstrument" name="Auto-Instrument" />
@@ -416,7 +417,7 @@ Vue.component(
 					<tbody>
 						<tr
 							v-for="(row, rowIndex) in tableRows"
-							:id="'pattern_editor_row_'+rowIndex"
+							:class="'perow_'+rowIndex"
 							>
 							<th>row {{formatByte(rowIndex)}}</th>
 							<td v-for="(instruction, channelIndex) in row"
@@ -425,6 +426,7 @@ Vue.component(
 								<instruction-editor
 									:isNoise="channels[channelIndex].isNoise"
 									:instruction="instruction"
+									:cellName="'pecell_'+rowIndex+'_'+channelIndex+'_'"
 									:setActive="function(property){setActive(rowIndex, channelIndex, property)}"
 								/>
 							</td>
@@ -476,42 +478,29 @@ Vue.component(
 	}
 );
 
-// Unfortunately, our attempts to do this part the CSS or Vue way failed. The computer just isn't smart enough to realize how little work it needs to do.
-let prevActiveRow = null, prevActiveEntry = null;
-let recursivelyFindTitle = function(list, target) {
-	for(var n = 0; list[n]; ++n) {
-		if(list[n].title == target) return list[n];
-		else {
-			let ret = recursivelyFindTitle(list[n].children, target);
-			if(ret) return ret;
-		}
+Vue.component(
+	'editor-state-styling',
+	{
+		props: {
+			editorState: Object
+		},
+		computed: {
+			activeStyling: function(){
+				let editorState = this.editorState;
+				return `
+					<style>
+					tr.perow_${editorState.activeRowIndex}{
+						background-color: #226;
+					}
+					span.pecell_${editorState.activeRowIndex}_${editorState.activeChannelIndex}_${editorState.activeProperty}{
+						background-color: #264;
+					}
+				</style>
+					`;
+			}
+		},
+		template: `
+			<div class="editor-state-styling" v-html="activeStyling"></div>
+			`
 	}
-}
-let updateActive = function() {
-	requestAnimationFrame(updateActive);
-	let newActiveRow = document.getElementById('pattern_editor_row_'+app.editorState.activeRowIndex);
-	if(newActiveRow != prevActiveRow) {
-		if(prevActiveRow != null) {
-			prevActiveRow.classList.remove('active');
-		}
-		if(newActiveRow != null) {
-			newActiveRow.classList.add('active');
-		}
-		prevActiveRow = newActiveRow;
-	}
-	let newActiveEntry;
-	if(newActiveRow) {
-		let channel = newActiveRow.children.namedItem('channel'+app.editorState.activeChannelIndex);
-		newActiveEntry = recursivelyFindTitle(channel.children, app.editorState.activeProperty);
-	}
-	if(newActiveEntry != prevActiveEntry) {
-		if(prevActiveEntry != null) {
-			prevActiveEntry.classList.remove('active');
-		}
-		if(newActiveEntry != null) {
-			newActiveEntry.classList.add('active');
-		}
-		prevActiveEntry = newActiveEntry;
-	}
-};
-requestAnimationFrame(updateActive);
+);

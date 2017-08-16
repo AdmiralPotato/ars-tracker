@@ -38,7 +38,8 @@ Vue.component(
 			instruction: Object,
 			isActive: Boolean,
 			setActive: Function,
-			activeProperty: String
+			activeProperty: String,
+			cellName: String
 		},
 		computed: {
 			note: function () {
@@ -72,19 +73,19 @@ Vue.component(
 		template: `
 			<div class="instruction-editor">
 				<span class="property c3">
-					<table-input :setActive="setActive" name="note"            :value="note"          />
+					<table-input :cellName="cellName" :setActive="setActive" name="note"            :value="note"          />
 				</span>
 				<span class="property c2">
-					<table-input :setActive="setActive" name="instrument_high" :value="instrument[0]" />
-					<table-input :setActive="setActive" name="instrument_low"  :value="instrument[1]" />
+					<table-input :cellName="cellName" :setActive="setActive" name="instrument_high" :value="instrument[0]" />
+					<table-input :cellName="cellName" :setActive="setActive" name="instrument_low"  :value="instrument[1]" />
 				</span>
 				<span class="property c1">
-					<table-input :setActive="setActive" name="volume"          :value="volume"        />
+					<table-input :cellName="cellName" :setActive="setActive" name="volume"          :value="volume"        />
 				</span>
 				<span class="property c3">
-					<table-input :setActive="setActive" name="fx0_type"        :value="fx0[0]"        />
-					<table-input :setActive="setActive" name="fx0_high"        :value="fx0[1]"        />
-					<table-input :setActive="setActive" name="fx0_low"         :value="fx0[2]"        />
+					<table-input :cellName="cellName" :setActive="setActive" name="fx0_type"        :value="fx0[0]"        />
+					<table-input :cellName="cellName" :setActive="setActive" name="fx0_high"        :value="fx0[1]"        />
+					<table-input :cellName="cellName" :setActive="setActive" name="fx0_low"         :value="fx0[2]"        />
 				</span>
 			</div>
 		`
@@ -97,7 +98,8 @@ Vue.component(
 		props: {
 			name: String,
 			value: [String, Number],
-			setActive: Function
+			setActive: Function,
+			cellName: String
 		},
 		methods: {
 			click: function () {
@@ -107,7 +109,7 @@ Vue.component(
 		template: `
 			<span
 				class="entry"
-				:class="name"
+				:class="cellName+name+' '+name"
 				@click="click"
 				:title="name"
 			>{{value}}</span>
