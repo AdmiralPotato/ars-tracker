@@ -8,6 +8,7 @@ let effect_name_to_letter = {
 	"halt":"C",
 	"skip":"D",
 	"fastness":"F",
+	"next":"N",
 	"pan":"P",
 	"speed":"S",
 	"tempo":"T",

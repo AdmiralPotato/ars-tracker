@@ -91,6 +91,11 @@ let playback = {
 			// set it to -1 here and it ends up as 0.
 			app.editorState.activeRowIndex = -1;
 		},
+		next: function(param) {
+			let song = app.projectState.songs[app.editorState.activeSongIndex];
+			// we will act as though we were in the last row of the pattern
+			app.editorState.activeRowIndex = song.rows-1;
+		},
 		halt: function(param) {
 			// TODO: this is a bit of a layering violation
 			app.vue.changePlaybackState('paused');
