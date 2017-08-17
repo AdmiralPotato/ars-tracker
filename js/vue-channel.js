@@ -359,6 +359,9 @@ Vue.component(
 				let patterns = this.patterns;
 				let activeOrder = this.activeOrder;
 				activeOrder.forEach(function (channelOrderIndex, channelIndex) {
+					while(channelOrderIndex >= patterns[channelIndex].length){
+						patterns[channelIndex].push([]);
+					}
 					let patternRows = patterns[channelIndex][channelOrderIndex];
 					for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
 						let instruction = patternRows[rowIndex];

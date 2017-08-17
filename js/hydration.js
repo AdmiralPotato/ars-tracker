@@ -95,6 +95,10 @@ let hydration = {
 						pattern.splice(pattern.length-1, 1);
 					}
 				});
+				// trim off trailing empty patterns
+				while(channel.length > 0 && channel[channel.length-1].length == 0) {
+					channel.splice(channel.length-1, 1);
+				}
 			});
 		});
 		// Our caller can JSON.stringify if they want, or not if they don't.
