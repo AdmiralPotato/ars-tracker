@@ -195,6 +195,7 @@ let keyFilterMap = {
 				   || instruction.note === 'cut'
 				   || instruction.note === 'off') instruction.note = digit;
 				else instruction.note = ((instruction.note << 4) | digit) & 255;
+				applyAutoInstrument(instruction);
 				updateInstruction(instruction);
 				return true;
 			}
@@ -220,6 +221,7 @@ let keyFilterMap = {
 				if(instruction.note === null
 				   || instruction.note === 'cut'
 				   || instruction.note === 'off') instruction.note = 60;
+				applyAutoInstrument(instruction);
 				instruction.note = (instruction.note - instruction.note % 12) + noteLetterMap[uppercase];
 				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
 				updateInstruction(instruction);
@@ -242,6 +244,7 @@ let keyFilterMap = {
 				if(instruction.note === null
 				   || instruction.note === 'cut'
 				   || instruction.note === 'off') return false;
+				applyAutoInstrument(instruction);
 				++instruction.note;
 				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
 				updateInstruction(instruction);
