@@ -103,6 +103,7 @@ let eraseValue = function () {
 	} else {
 		instruction[property] = null;
 	}
+	updateInstruction(instruction);
 };
 let togglePlayback = function() {
 	if(app.editorState.playbackState == 'paused') {
