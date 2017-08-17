@@ -34,7 +34,28 @@ Vue.component(
 			}
 		},
 		methods: {
-			formatByte: formatByte
+			formatByte: formatByte,
+			insertOrderBefore: function() {
+				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+				activeSong.orders.splice(app.editorState.activeOrderIndex, 0, [0,0,0,0,0,0,0,0]);
+				++app.editorState.activeOrderIndex;
+			},
+			duplicateOrder: function() {
+				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+				activeSong.orders.splice(app.editorState.activeOrderIndex, 0, activeSong.orders[app.editorState.activeOrderIndex].slice());
+				++app.editorState.activeOrderIndex;
+			},
+			insertOrderAfter: function() {
+				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+				activeSong.orders.splice(app.editorState.activeOrderIndex+1, 0, [0,0,0,0,0,0,0,0]);
+			},
+			deleteOrder: function() {
+				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+				activeSong.orders.splice(app.editorState.activeOrderIndex, 1);
+				if(app.editorState.activeOrderIndex >= activeSong.orders.length) {
+					--app.editorState.activeOrderIndex;
+				}
+			}
 		},
 		template: `
 			<div class="order-editor">
@@ -55,6 +76,30 @@ Vue.component(
 						</tr>
 					</tbody>
 				</table>
+				<ul class="tab-list">
+					<li class="noSelect buttons">
+						<button @click="insertOrderBefore()">
+							Insert Order Before
+						</button>
+					</li>
+					<li class="noSelect buttons">
+						<button @click="duplicateOrder()">
+							Duplicate Order
+						</button>
+					</li>
+					<li class="noSelect buttons">
+						<button @click="insertOrderAfter()">
+							Insert Order After
+						</button>
+					</li>
+					<li class="noSelect buttons">
+						<button @click="deleteOrder()"
+							:disabled="orders.length <= 1"
+							>
+							Delete Order
+						</button>
+					</li>
+				</ul>
 			</div>
 		`
 	}

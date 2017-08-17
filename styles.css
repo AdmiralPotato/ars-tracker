@@ -97,6 +97,13 @@ button{
 button.active{
 	background-color: #264;
 }
+button:active{
+	background-color: #fff;
+	color:#000;
+}
+button:disabled{
+	color:#777;
+}
 table {
 	border-spacing: 0;
 	border-bottom: 1px solid #666;
