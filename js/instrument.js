@@ -12,10 +12,10 @@ let Instrument = function(argsObject){
 };
 
 Instrument.sequences = [
-	{name: 'volume',   min: 0,    max:15},
-	{name: 'arpeggio', min: -120, max:120},
-	{name: 'pitch',    min: -128, max:127},
-	{name: 'waveform', min: 0,    max:255}
+	{name: 'volume',   min: 0,    max:15,  ifMissing:"15"},
+	{name: 'arpeggio', min: -120, max:120, ifMissing:"0"},
+	{name: 'pitch',    min: -128, max:127, ifMissing:"0"},
+	{name: 'waveform', min: 0,    max:255, ifMissing:"0"}
 ];
 
 let Sequence = function(sequenceString){

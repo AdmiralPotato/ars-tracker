@@ -21,6 +21,11 @@ let hydration = {
 	hydrate: function (state) {
 		// turn instruments into objects
 		state.instruments = state.instruments.map(function (instrumentData) {
+			Instrument.sequences.forEach(function(sequence) {
+				if(instrumentData[sequence.name] == undefined) {
+					instrumentData[sequence.name] = sequence.ifMissing;
+				}
+			});
 			return new Instrument(instrumentData);
 		});
 		// de-RLE the patterns
@@ -57,6 +62,12 @@ let hydration = {
 			// turn sequences back into their stringy selves
 			Instrument.sequences.forEach(function (seq) {
 				instrument[seq.name] = instrument[seq.name].string;
+			});
+			// and delete the default ones
+			Instrument.sequences.forEach(function(sequence) {
+				if(instrumentData[sequence.name] == sequence.ifMissing) {
+					delete instrumentData[sequence.name];
+				}
 			});
 		});
 		dehydrated.songs.forEach(function (song) {
