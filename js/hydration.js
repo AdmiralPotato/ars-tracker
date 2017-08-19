@@ -65,8 +65,8 @@ let hydration = {
 			});
 			// and delete the default ones
 			Instrument.sequences.forEach(function(sequence) {
-				if(instrumentData[sequence.name] == sequence.ifMissing) {
-					delete instrumentData[sequence.name];
+				if(instrument[sequence.name] == sequence.ifMissing) {
+					delete instrument[sequence.name];
 				}
 			});
 		});
