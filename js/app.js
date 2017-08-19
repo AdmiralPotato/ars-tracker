@@ -45,68 +45,42 @@ let app = {
 			patterns: [[[]],[[]],[[]],[[]],[[]],[[]],[[]],[[]]]
 		}]
 	},
-	handleKeyOn: function(keyIndex){
-		let channelIndex = app.getNextAvailableChannelIndex();
-		if(channelIndex !== null){
-			let polyphonyNote = app.editorState.polyphony[channelIndex];
-			let instrument = app.editorState.activeInstrument;
-			polyphonyNote.noteIndex = keyIndex;
-			polyphonyNote.startTime = Date.now;
-			app.editorState.onKeys.push(keyIndex);
-			channels[channelIndex].setActiveInstrument(instrument);
-			channels[channelIndex].noteOn(keyIndex);
-			if(app.editorState.recordMIDI) {
-				recordNoteOn(keyIndex, channelIndex);
-			}
+	cookChannelIndex: function (rawChannel) {
+		if(app.editorState.respectMIDIChannels) {
+			if(rawChannel >= 8) rawChannel = app.editorState.activeChannelIndex;
+			return rawChannel;
 		}
-	},
-	getNextAvailableChannelIndex: function () {
-		if(!app.editorState.enablePolyphony) return app.editorState.activeChannelIndex;
-		let oldestSilentChannel = null;
-		let oldestSilentChannelTime = null;
-		let oldestActiveChannel = null;
-		let oldestActiveChannelTime = null;
-		let polyphonyChannels = app.editorState.polyphonyChannels;
-		let polyphony = app.editorState.polyphony;
-		polyphonyChannels.forEach(function (channelIndex) {
-			let polyphonyNote = polyphony[channelIndex];
-			if(!polyphonyNote.noteIndex){
-				let isOnlyOrOldest = (
-					oldestSilentChannelTime === null ||
-					polyphonyNote.startTime < oldestSilentChannelTime
-				);
-				if(isOnlyOrOldest){
-					oldestSilentChannel = channelIndex;
-					oldestSilentChannelTime = polyphonyNote.startTime;
+		else if(!app.editorState.enablePolyphony) {
+			return app.editorState.activeChannelIndex;
+		}
+		else {
+			let oldestSilentChannel = null;
+			let oldestSilentChannelTime = null;
+			let oldestActiveChannel = null;
+			let oldestActiveChannelTime = null;
+			let polyphonyChannels = app.editorState.polyphonyChannels;
+			let polyphony = app.editorState.polyphony;
+			polyphonyChannels.forEach(function (channelIndex) {
+				let polyphonyNote = polyphony[channelIndex];
+				if(!polyphonyNote.noteIndex){
+					let isOnlyOrOldest = (
+						oldestSilentChannelTime === null ||
+							polyphonyNote.startTime < oldestSilentChannelTime
+					);
+					if(isOnlyOrOldest){
+						oldestSilentChannel = channelIndex;
+						oldestSilentChannelTime = polyphonyNote.startTime;
+					}
+				} else if(
+					oldestActiveChannelTime === null ||
+						polyphonyNote.startTime < oldestActiveChannelTime
+				){
+					oldestActiveChannel = channelIndex;
+					oldestActiveChannelTime = polyphonyNote.startTime;
 				}
-			} else if(
-				oldestActiveChannelTime === null ||
-				polyphonyNote.startTime < oldestActiveChannelTime
-			){
-				oldestActiveChannel = channelIndex;
-				oldestActiveChannelTime = polyphonyNote.startTime;
-			}
-		});
-		let targetChannelIndex = oldestSilentChannelTime !== null ? oldestSilentChannel : oldestActiveChannel;
-		return targetChannelIndex;
-	},
-	handleKeyOff: function(keyIndex){
-		arrayRemove(app.editorState.onKeys, keyIndex);
-		app.removePolyphonyNodeByKeyIndex(keyIndex);
-	},
-	removePolyphonyNodeByKeyIndex: function (keyIndex) {
-		let found = false;
-		let polyphony = app.editorState.polyphony;
-		for (let i = 0; i < polyphony.length; i++) {
-			let polyphonyNote = polyphony[i];
-			if(polyphonyNote.noteIndex === keyIndex){
-				found = true;
-				channels[i].noteOff();
-				polyphony[i].noteIndex = null;
-				if(app.editorState.recordMIDI) {
-					recordNoteOff(i);
-				}
-			}
+			});
+			let targetChannelIndex = oldestSilentChannelTime !== null ? oldestSilentChannel : oldestActiveChannel;
+			return targetChannelIndex;
 		}
 	},
 	_audioInterval: null,
@@ -173,6 +147,159 @@ let app = {
 	},
 	repeatFilter: function (key, value) {
 		return key === 'repeat' ? undefined : value;
+	},
+	////// MIDI handling
+	//
+	// Handle a Note On message.
+	//
+	// note: MIDI note number (0-127)
+	// velocity: Key velocity (1-127)
+	// channel: MIDI channel (0-15)
+	//
+	handleMIDINoteOn: function(note, velocity, channel){
+		let channelIndex = app.cookChannelIndex(channel);
+		if(channelIndex !== null){
+			let polyphonyNote = app.editorState.polyphony[channelIndex];
+			let instrument = app.editorState.activeInstrument;
+			polyphonyNote.noteIndex = note;
+			polyphonyNote.startTime = Date.now;
+			app.editorState.onKeys.push(note);
+			channels[channelIndex].setActiveInstrument(instrument);
+			channels[channelIndex].noteOn(note);
+			if(app.editorState.recordMIDI) {
+				recordNoteOn(note, velocity, channelIndex);
+			}
+		}
+	},
+	//
+	// Handle a Note Off message.
+	//
+	// note: MIDI note number (0-127)
+	// velocity: Key velocity (0-127)
+	// channel: MIDI channel (0-15)
+	//
+	handleMIDINoteOff: function(note, velocity, channel){
+		arrayRemove(app.editorState.onKeys, note);
+		let polyphony = app.editorState.polyphony;
+		if(app.editorState.respectMIDIChannels) {
+			if(channel >= 8) channel = app.editorState.activeChannelIndex;
+			channels[channel].noteOff();
+			polyphony[channel].noteIndex = null;
+			if(app.editorState.recordMIDI) {
+				recordNoteOff(channel);
+			}
+		}
+		else {
+			let found = false;
+			for (let i = 0; i < polyphony.length; i++) {
+				let polyphonyNote = polyphony[i];
+				if(polyphonyNote.noteIndex === note){
+					found = true;
+					channels[i].noteOff();
+					polyphony[i].noteIndex = null;
+					if(app.editorState.recordMIDI) {
+						recordNoteOff(i);
+					}
+				}
+			}
+		}
+	},
+	//
+	// Handle a Poly Pressure message. This reflects a change in the pressure of a previous Note On.
+	//
+	// note: MIDI note number of previous note (0-127)
+	// velocity: Updated key velocity (0-127)
+	// channel: MIDI channel (0-15)
+	//
+	handleMIDIPolyPressure: function(note, velocity, channel) {},
+	//
+	// Handle a Channel Pressure message. This reflects a change in the pressure of the most recent note.
+	//
+	// velocity: Updated key velocity (0-127)
+	// channel: MIDI channel (0-15)
+	//
+	handleMIDIChannelPressure: function(velocity, channel) {},
+	//
+	// Handle a Program Change message.
+	//
+	// program: The program number (instrument) to switch to.
+	// channel: MIDI channel (0-15)
+	//
+	handleMIDIProgramChange: function(program, channel) {},
+	//
+	// Handle a Pitch Bend message.
+	//
+	// amount: The amount of pitch bend to apply. Range is -8192 to 8191.
+	// channel: MIDI channel (0-15)
+	//
+	handleMIDIPitchBend: function(amount, channel) {},
+	//
+	// Handle an All Sound Off message. This message is not sent during normal playback and should not be recorded.
+	//
+	// channel: MIDI channel (0-15). This parameter isn't what you think; you should stop notes on all channels.
+	//
+	handleMIDIAllSoundOff: function(channel) {
+		let polyphony = app.editorState.polyphony;
+		app.editorState.onKeys.length = 0;
+		for(let i = 0; i < channels.length; ++i) {
+			channels[i].noteCut();
+			polyphony[i].noteIndex = null;
+		}
+	},
+	//
+	// Handle an All Notes Off message. This message is not sent during normal playback and should not be recorded.
+	//
+	// channel: MIDI channel (0-15). This parameter isn't what you think; you should stop notes on all channels.
+	//
+	handleMIDIAllNotesOff: function(channel) {
+		let polyphony = app.editorState.polyphony;
+		app.editorState.onKeys.length = 0;
+		for(let i = 0; i < channels.length; ++i) {
+			channels[i].noteOff();
+			polyphony[i].noteIndex = null;
+		}
+	},
+	//
+	// Handle a Song Position pointer update message.
+	//
+	// position: New Song Position, in units of six Clock Beats. Range is 0-16383.
+	//
+	handleMIDISongPosition: function(position) {},
+	//
+	// Handle a Song Select message.
+	//
+	// song: New song number. Range is 0-127.
+	//
+	handleMIDISongSelect: function(song) {},
+	//
+	// Handle a Timing Clock message. This denotes the passage of one MIDI tick. There are 6 MIDI ticks in a sixteenth note, and 24 in a quarter note.
+	//
+	// Normally, Timing Clocks ought to be ignored (except for phase locking purposes) except between Start/Continue and Stop.
+	//
+	handleMIDITimingClock: function() {},
+	//
+	// Handle a Start message. Playback/recording should begin at the beginning of the song or sequence. Ignore if playback/recording is already in progress.
+	//
+	handleMIDIStart: function() {},
+	//
+	// Handle a Continue message. Playback/recording should begin at the most recent position. Ignore if playback/recording is already in progress.
+	//
+	handleMIDIContinue: function() {},
+    //
+	// Handle a Stop message. Playback/recording should cease. Ignore if playback/recording is NOT currently in progress.
+	//
+	handleMIDIStop: function() {},
+	//
+	// Reset EVERYTHING. Not sent lightly.
+	//
+	handleMIDIReset: function() {
+		let polyphony = app.editorState.polyphony;
+		app.editorState.onKeys.splice(0, app.editorState.onKeys.length);
+		for(let i = 0; i < channels.length; ++i) {
+			polyphony[i].noteIndex = null;
+			channels[i].noteCut();
+			channels[i].forgetFX();
+		}
 	}
 };
 
@@ -192,10 +319,10 @@ app.vue = new Vue({
 	},
 	methods: {
 		on: function(index){
-			app.handleKeyOn(index);
+			app.handleMIDINoteOn(index, 127, 16);
 		},
 		off: function(index){
-			app.handleKeyOff(index);
+			app.handleMIDINoteOff(index, 127, 16);
 		},
 		changeInstrument: function (instrumentIndex) {
 			app.editorState.activeInstrument = app.projectState.instruments[instrumentIndex];

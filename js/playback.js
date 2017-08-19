@@ -7,10 +7,7 @@ let playback = {
 	ticksLeft: 0,
 	playbackStateDidChange: function (from, to){
 		if(to === 'paused'){
-			channels.forEach(function(channel) {
-				channel.noteCut();
-				channel.forgetFX();
-			});
+			app.handleMIDIReset();
 		}
 		else if(from === 'paused'){
 			let song = app.projectState.songs[app.editorState.activeSongIndex];
