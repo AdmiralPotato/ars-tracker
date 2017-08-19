@@ -23,11 +23,9 @@ Vue.component(
 			},
 			on: function () {
 				this.holding = true;
-				console.log('on');
 			},
 			off: function () {
 				this.holding = false;
-				console.log('off');
 			}
 		},
 		template: `
