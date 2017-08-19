@@ -28,9 +28,16 @@ let app = {
 		playbackState: 'paused',
 		playbackStateOnLastPause: 'playSong',
 		autoAdvance: true,
+		autoAdvanceOrder: false,
 		autoInstrument: true,
 		recordMIDI: false,
 		enablePolyphony: false,
+		respectMIDIClocks: false,
+		respectMIDIChannels: false,
+		respectMIDIInstruments: false,
+		respectMIDIVelocities: false,
+		midiClockPhase: 0,
+		midiClockActive: false,
 	},
 	projectState: {
 		instruments: [
@@ -164,7 +171,13 @@ let app = {
 			polyphonyNote.noteIndex = note;
 			polyphonyNote.startTime = Date.now;
 			app.editorState.onKeys.push(note);
-			channels[channelIndex].setActiveInstrument(instrument);
+			// the channel >= 8 check is intentionally checking the RAW channel
+			if(channel >= 8 || !app.editorState.respectMIDIInstruments
+			   || channels[channelIndex].instrument == null)
+				channels[channelIndex].setActiveInstrument(instrument);
+			if(app.editorState.respectMIDIVelocities) {
+				channels[channelIndex].setVolume((velocity+7)>>3);
+			}
 			channels[channelIndex].noteOn(note);
 			if(app.editorState.recordMIDI) {
 				recordNoteOn(note, velocity, channelIndex);
@@ -186,7 +199,7 @@ let app = {
 			channels[channel].noteOff();
 			polyphony[channel].noteIndex = null;
 			if(app.editorState.recordMIDI) {
-				recordNoteOff(channel);
+				recordNoteOff(channel, channel);
 			}
 		}
 		else {
@@ -198,7 +211,7 @@ let app = {
 					channels[i].noteOff();
 					polyphony[i].noteIndex = null;
 					if(app.editorState.recordMIDI) {
-						recordNoteOff(i);
+						recordNoteOff(i, channel);
 					}
 				}
 			}
@@ -225,7 +238,18 @@ let app = {
 	// program: The program number (instrument) to switch to.
 	// channel: MIDI channel (0-15)
 	//
-	handleMIDIProgramChange: function(program, channel) {},
+	handleMIDIProgramChange: function(program, channel) {
+		if(!app.editorState.respectMIDIInstruments) return;
+		if(program < app.projectState.instruments.length) {
+			let channelIndex = app.cookChannelIndex(channel);
+			if(channelIndex != null) {
+				channels[channelIndex].setActiveInstrument(app.projectState.instruments[program]);
+				if(app.editorState.recordMIDI) {
+					recordInstrument(program, channelIndex);
+				}
+			}
+		}
+	},
 	//
 	// Handle a Pitch Bend message.
 	//
@@ -276,19 +300,37 @@ let app = {
 	//
 	// Normally, Timing Clocks ought to be ignored (except for phase locking purposes) except between Start/Continue and Stop.
 	//
-	handleMIDITimingClock: function() {},
+	handleMIDITimingClock: function() {
+		if(!app.editorState.midiClockActive) return;
+		if(++app.editorState.midiClockPhase >= 6) {
+			app.editorState.midiClockPhase -= 6;
+			if(app.editorState.recordMIDI && app.editorState.respectMIDIClocks) {
+				recordAdvance();
+			}
+		}
+	},
 	//
 	// Handle a Start message. Playback/recording should begin at the beginning of the song or sequence. Ignore if playback/recording is already in progress.
 	//
-	handleMIDIStart: function() {},
+	handleMIDIStart: function() {
+		if(!app.editorState.midiClockActive) {
+			app.editorState.midiClockActive = true;
+			app.editorState.midiClockPhase = 0;
+		}
+	},
 	//
 	// Handle a Continue message. Playback/recording should begin at the most recent position. Ignore if playback/recording is already in progress.
 	//
-	handleMIDIContinue: function() {},
+	handleMIDIContinue: function() {
+		app.editorState.midiClockActive = true;
+		// don't alter phase
+	},
     //
 	// Handle a Stop message. Playback/recording should cease. Ignore if playback/recording is NOT currently in progress.
 	//
-	handleMIDIStop: function() {},
+	handleMIDIStop: function() {
+		app.editorState.midiClockActive = false;
+	},
 	//
 	// Reset EVERYTHING. Not sent lightly.
 	//

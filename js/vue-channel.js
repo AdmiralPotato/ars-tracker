@@ -115,9 +115,10 @@ let instructionProperties = [
 let getInstruction = function(overrideChannel){
 	let editorState = app.editorState;
 	let projectState = app.projectState;
+	let channelIndex = overrideChannel != null ? overrideChannel : editorState.activeChannelIndex;
 	let activeSong = projectState.songs[editorState.activeSongIndex];
-	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][overrideChannel || editorState.activeChannelIndex];
-	let activePattern = activeSong.patterns[overrideChannel || editorState.activeChannelIndex][activePatternIndex];
+	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][channelIndex];
+	let activePattern = activeSong.patterns[channelIndex][activePatternIndex];
 	while(activePattern.length < activeSong.rows) {
 		activePattern.push(hydration.newEmptyInstruction());
 	}
@@ -127,9 +128,10 @@ let getInstruction = function(overrideChannel){
 let updateInstruction = function(newInstruction, overrideChannel){
 	let editorState = app.editorState;
 	let projectState = app.projectState;
+	let channelIndex = overrideChannel != null ? overrideChannel : editorState.activeChannelIndex;
 	let activeSong = projectState.songs[editorState.activeSongIndex];
-	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][overrideChannel || editorState.activeChannelIndex];
-	let activePattern = activeSong.patterns[overrideChannel || editorState.activeChannelIndex][activePatternIndex];
+	let activePatternIndex = activeSong.orders[editorState.activeOrderIndex][channelIndex];
+	let activePattern = activeSong.patterns[channelIndex][activePatternIndex];
 	let oldInstruction = activePattern[editorState.activeRowIndex];
 	for(let prop in newInstruction) {
 		// in practice, this will always update a non-null fx
@@ -170,14 +172,17 @@ let filterHexDigitKey = function(event) {
 	else
 		return false;
 };
-let applyAutoInstrument = function(instruction) {
+let applyAutoInstrument = function(instruction,channel) {
 	if(!app.editorState.autoInstrument) return;
-	let index = app.projectState.instruments.indexOf(app.editorState.activeInstrument);
+	let index = app.projectState.instruments.indexOf((app.editorState.respectMIDIInstruments && channel) ? channel.instrument : app.editorState.activeInstrument);
 	if(index >= 0) instruction.instrument = index;
 }
 let autoAdvance = function() {
 	if(app.editorState.autoAdvance && app.editorState.playbackState == 'paused') {
 		app.editorState.activeRowIndex = (app.editorState.activeRowIndex + 1) % app.projectState.songs[app.editorState.activeSongIndex].rows;
+		if(app.editorState.autoAdvanceOrder && app.editorState.activeRowIndex == 0) {
+			app.editorState.activeOrderIndex = (app.editorState.activeOrderIndex + 1) % app.projectState.songs[app.editorState.activeSongIndex].orders.length;
+		}
 	}
 }
 let noteLetterMap = {C:0, D:2, E:4, F:5, G:7, A:9, B:11};
@@ -329,19 +334,28 @@ for(let n = 0; n < 3; ++n) {
 		}
 	};
 }
-let recordNoteOn = function(noteValue, channel) {
+let recordNoteOn = function(noteValue, velocity, channel) {
 	let instruction = getInstruction(channel);
-	applyAutoInstrument(instruction);
+	applyAutoInstrument(instruction, channels[channel]);
 	instruction.note = noteValue;
 	if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
+	if(app.editorState.respectMIDIVelocities) instruction.volume = (velocity+7)>>3;
 	updateInstruction(instruction, channel);
-	autoAdvance();
+	if(!app.editorState.respectMIDIClocks) autoAdvance();
 };
 let recordNoteOff = function(channel) {
 	let instruction = getInstruction(channel);
 	instruction.instrument = null;
 	instruction.note = 'off';
 	updateInstruction(instruction, channel);
+	if(!app.editorState.respectMIDIClocks) autoAdvance();
+};
+let recordInstrument = function(instrument, channel) {
+	let instruction = getInstruction(channel);
+	instruction.instrument = instrument;
+	updateInstruction(instruction, channel);
+};
+let recordAdvance = function() {
 	autoAdvance();
 };
 
@@ -447,10 +461,15 @@ Vue.component(
 			>
 				<editor-state-styling :editorState="editorState" />
 				<ul class="tab-list">
-					<prop-checkbox :source="editorState" prop="autoAdvance" name="Auto Advance" />
+					<prop-checkbox :source="editorState" prop="autoAdvance" name="Auto Advance Row" />
+					<prop-checkbox :source="editorState" prop="autoAdvanceOrder" name="Auto Advance Order" />
 					<prop-checkbox :source="editorState" prop="autoInstrument" name="Auto-Instrument" />
 					<prop-checkbox :source="editorState" prop="recordMIDI" name="Record MIDI" />
-					<prop-checkbox :source="editorState" prop="enablePolyphony" name="MIDI Polyphony" />
+					<prop-checkbox :source="editorState" prop="respectMIDIClocks" name="MIDI Clock" />
+					<prop-checkbox :source="editorState" prop="respectMIDIVelocities" name="MIDI Velocity" />
+					<prop-checkbox :source="editorState" prop="respectMIDIInstruments" name="MIDI Instrument" />
+					<prop-checkbox :source="editorState" prop="respectMIDIChannels" name="MIDI Channel" />
+					<prop-checkbox :source="editorState" prop="enablePolyphony" name="MIDI Auto-Polyphony" />
 				</ul>
 				<table>
 					<thead>
