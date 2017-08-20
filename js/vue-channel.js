@@ -367,9 +367,10 @@ let recordNoteOn = function(noteValue, velocity, channel) {
 	if(!app.editorState.respectMIDIClocks) autoAdvance();
 };
 let recordNoteOff = function(channel) {
+	if(app.editorState.noteOffMode == 'ignored') return;
 	let instruction = getInstruction(channel);
 	instruction.instrument = null;
-	instruction.note = 'off';
+	instruction.note = app.editorState.noteOffMode;
 	updateInstruction(instruction, channel);
 	if(!app.editorState.respectMIDIClocks) autoAdvance();
 };
@@ -417,6 +418,20 @@ Vue.component(
 				});
 				return rows;
 			}
+		},
+		data: function(){
+			return {
+				noteOffModes: {
+					'off': 'Note Off→Off',
+					'cut': 'Note Off→Cut',
+					'ignored': 'Note Off Ignored'
+				},
+				sppModes: {
+					'ignored': 'Ignore SPP',
+					'pattern': 'Pattern SPP',
+					'song': 'Song SPP',
+				},
+			};
 		},
 		methods: {
 			formatByte: formatByte,
@@ -470,6 +485,12 @@ Vue.component(
 			},
 			wrapRange: function(n, max){
 				return (n + max) % max;
+			},
+			changeNoteOffMode: function(newMode) {
+				app.editorState.noteOffMode = newMode;
+			},
+			changeSPPMode: function(newMode) {
+				app.editorState.sppMode = newMode;
 			}
 		},
 		template: `
@@ -487,12 +508,36 @@ Vue.component(
 					<prop-checkbox :source="editorState" prop="autoAdvance" name="Auto Advance Row" />
 					<prop-checkbox :source="editorState" prop="autoAdvanceOrder" name="Auto Advance Order" />
 					<prop-checkbox :source="editorState" prop="autoInstrument" name="Auto-Instrument" />
+				</ul>
+				<ul class="tab-list">
 					<prop-checkbox :source="editorState" prop="recordMIDI" name="Record MIDI" />
 					<prop-checkbox :source="editorState" prop="respectMIDIClocks" name="MIDI Clock" />
 					<prop-checkbox :source="editorState" prop="respectMIDIVelocities" name="MIDI Velocity" />
 					<prop-checkbox :source="editorState" prop="respectMIDIInstruments" name="MIDI Instrument" />
 					<prop-checkbox :source="editorState" prop="respectMIDIChannels" name="MIDI Channel" />
 					<prop-checkbox :source="editorState" prop="enablePolyphony" name="MIDI Auto-Polyphony" />
+				</ul>
+				<ul class="tab-list">
+					<li class="noSelect buttons">
+						<button
+							v-for="(symbol, name) in noteOffModes"
+							@click="changeNoteOffMode(name)"
+							:title="editorState.noteOffMode"
+							:class="{active: name === editorState.noteOffMode}"
+						>
+							<span v-html="symbol"></span>
+						</button>
+					</li>
+					<li class="noSelect buttons">
+						<button
+							v-for="(symbol, name) in sppModes"
+							@click="changeSPPMode(name)"
+							:title="editorState.sppMode"
+							:class="{active: name === editorState.sppMode}"
+						>
+							<span v-html="symbol"></span>
+						</button>
+					</li>
 				</ul>
 				<table>
 					<thead>

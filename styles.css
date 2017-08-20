@@ -179,19 +179,19 @@ ul.tab-list li a{
 	background-color: #003;
 }
 
-.song ul.tab-list li{
+ul.tab-list li{
 	padding: 0 0.25rem;
 	border-right: 1px solid #333;
 }
 
-.song ul.tab-list li input{
+ul.tab-list li input{
 	display: block;
 	width: 100%;
 }
-.song ul.tab-list li.buttons{
+ul.tab-list li.buttons{
 	display: flex;
 }
-.song ul.tab-list li.buttons button{
+ul.tab-list li.buttons button{
 	flex-shrink: 0;
 }
 

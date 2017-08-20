@@ -38,6 +38,8 @@ let app = {
 		respectMIDIVelocities: false,
 		midiClockPhase: 0,
 		midiClockActive: false,
+		noteOffMode: 'off',
+		sppMode: 'ignored',
 	},
 	projectState: {
 		instruments: [
@@ -192,11 +194,15 @@ let app = {
 	// channel: MIDI channel (0-15)
 	//
 	handleMIDINoteOff: function(note, velocity, channel){
+		if(app.editorState.noteOffMode == 'ignored') return;
 		arrayRemove(app.editorState.onKeys, note);
 		let polyphony = app.editorState.polyphony;
 		if(app.editorState.respectMIDIChannels) {
 			if(channel >= 8) channel = app.editorState.activeChannelIndex;
-			channels[channel].noteOff();
+			if(app.editorState.noteOffMode == 'cut')
+				channels[channel].noteCut();
+			else
+				channels[channel].noteOff();
 			polyphony[channel].noteIndex = null;
 			if(app.editorState.recordMIDI) {
 				recordNoteOff(channel, channel);
@@ -208,7 +214,10 @@ let app = {
 				let polyphonyNote = polyphony[i];
 				if(polyphonyNote.noteIndex === note){
 					found = true;
-					channels[i].noteOff();
+					if(app.editorState.noteOffMode == 'cut')
+						channels[i].noteCut();
+					else
+						channels[i].noteOff();
 					polyphony[i].noteIndex = null;
 					if(app.editorState.recordMIDI) {
 						recordNoteOff(i, channel);
@@ -284,11 +293,22 @@ let app = {
 		}
 	},
 	//
-	// Handle a Song Position pointer update message.
+	// Handle a Song Position Pointer update message.
 	//
 	// position: New Song Position, in units of six Clock Beats. Range is 0-16383.
 	//
-	handleMIDISongPosition: function(position) {},
+	handleMIDISongPosition: function(position) {
+		let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+		switch(app.editorState.sppMode) {
+		case 'song':
+			app.editorState.activeOrderIndex = Math.floor(position / activeSong.rows) % activeSong.orders.length;
+			/* fall through */
+		case 'pattern':
+			app.editorState.activeRowIndex = position % activeSong.rows;
+			app.editorState.midiClockPhase = 0;
+			break;
+		}
+	},
 	//
 	// Handle a Song Select message.
 	//
