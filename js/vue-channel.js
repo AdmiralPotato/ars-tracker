@@ -60,6 +60,7 @@ Vue.component(
 			insertOrderAfter: function(fresh) {
 				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
 				activeSong.orders.splice(app.editorState.activeOrderIndex+1, 0, makeNewOrder(activeSong, fresh));
+				++app.editorState.activeOrderIndex;
 			},
 			deleteOrder: function() {
 				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
