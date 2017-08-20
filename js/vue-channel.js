@@ -9,6 +9,18 @@ let formatByte = function (n) {
 	return templatePad(n.toString(16).toLocaleUpperCase(), '00');
 };
 
+let makeNewOrder = function(song, fresh) {
+	let newOrder = [0,0,0,0,0,0,0,0];
+	if(fresh) {
+		song.orders.forEach(function(order) {
+			for(let i = 0; i < channels.length; ++i) {
+				newOrder[i] = Math.max(newOrder[i], order[i]+1);
+			}
+		});
+	}
+	return newOrder;
+};
+
 Vue.component(
 	'order-editor',
 	{
@@ -35,9 +47,9 @@ Vue.component(
 		},
 		methods: {
 			formatByte: formatByte,
-			insertOrderBefore: function() {
+			insertOrderBefore: function(fresh) {
 				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
-				activeSong.orders.splice(app.editorState.activeOrderIndex, 0, [0,0,0,0,0,0,0,0]);
+				activeSong.orders.splice(app.editorState.activeOrderIndex, 0, makeNewOrder(activeSong, fresh));
 				++app.editorState.activeOrderIndex;
 			},
 			duplicateOrder: function() {
@@ -45,9 +57,9 @@ Vue.component(
 				activeSong.orders.splice(app.editorState.activeOrderIndex, 0, activeSong.orders[app.editorState.activeOrderIndex].slice());
 				++app.editorState.activeOrderIndex;
 			},
-			insertOrderAfter: function() {
+			insertOrderAfter: function(fresh) {
 				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
-				activeSong.orders.splice(app.editorState.activeOrderIndex+1, 0, [0,0,0,0,0,0,0,0]);
+				activeSong.orders.splice(app.editorState.activeOrderIndex+1, 0, makeNewOrder(activeSong, fresh));
 			},
 			deleteOrder: function() {
 				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
@@ -78,8 +90,13 @@ Vue.component(
 				</table>
 				<ul class="tab-list">
 					<li class="noSelect buttons">
-						<button @click="insertOrderBefore()">
-							Insert Order Before
+						<button @click="insertOrderBefore(false)">
+							Insert Zero Order Before
+						</button>
+					</li>
+					<li class="noSelect buttons">
+						<button @click="insertOrderBefore(true)">
+							Insert Fresh Order Before
 						</button>
 					</li>
 					<li class="noSelect buttons">
@@ -88,8 +105,13 @@ Vue.component(
 						</button>
 					</li>
 					<li class="noSelect buttons">
-						<button @click="insertOrderAfter()">
-							Insert Order After
+						<button @click="insertOrderAfter(false)">
+							Insert Zero Order After
+						</button>
+					</li>
+					<li class="noSelect buttons">
+						<button @click="insertOrderAfter(true)">
+							Insert Fresh Order After
 						</button>
 					</li>
 					<li class="noSelect buttons">
