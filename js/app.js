@@ -299,13 +299,20 @@ let app = {
 	//
 	handleMIDISongPosition: function(position) {
 		let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+		let songSpeed = activeSong.speed;
+		if(songSpeed != 6) {
+			position = Math.floor(position * 6 / songSpeed);
+			app.editorState.midiClockPhase = position * 6 % songSpeed;
+		}
+		else {
+			app.editorState.midiClockPhase = 0;
+		}
 		switch(app.editorState.sppMode) {
 		case 'song':
 			app.editorState.activeOrderIndex = Math.floor(position / activeSong.rows) % activeSong.orders.length;
 			/* fall through */
 		case 'pattern':
 			app.editorState.activeRowIndex = position % activeSong.rows;
-			app.editorState.midiClockPhase = 0;
 			break;
 		}
 	},
@@ -322,8 +329,9 @@ let app = {
 	//
 	handleMIDITimingClock: function() {
 		if(!app.editorState.midiClockActive) return;
-		if(++app.editorState.midiClockPhase >= 6) {
-			app.editorState.midiClockPhase -= 6;
+		let songSpeed = app.projectState.songs[app.editorState.activeSongIndex].speed;
+		while(++app.editorState.midiClockPhase >= songSpeed) {
+			app.editorState.midiClockPhase -= songSpeed;
 			if(app.editorState.recordMIDI && app.editorState.respectMIDIClocks) {
 				recordAdvance();
 			}

@@ -3,13 +3,14 @@
   The purpose of this function is to determine which effects should be... well, in effect, when playback begins at a given row. It doesn't seem to belong in any other
   file.
 
-  Later on, we can modify this to cache somewhat aggressively, and it will make more sense for it not to be in playback.js, and to have handleEffect be factored out like
-  this.
+  Later on, we can modify this to cache somewhat aggressively.
 
 */
 "use strict";
 
 // TODO: call this when a new order / row is selected during playback
+// TODO: memoize coldFX at least up to the nearest order (this will let us improve correctness, as well, in weird cases)
+// TODO: once this is memoized (and therefore runs in O(1)) use this to keep track of the current Speed for MIDI beat clock purposes
 let applyColdFX;
 {
 	let resetAll = function(song, handleEffect) {
