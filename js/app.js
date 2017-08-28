@@ -273,7 +273,7 @@ let app = {
 	//
 	handleMIDIAllSoundOff: function(channel) {
 		let polyphony = app.editorState.polyphony;
-		app.editorState.onKeys.length = 0;
+		app.editorState.onKeys.splice(0, app.editorState.onKeys.length);
 		for(let i = 0; i < channels.length; ++i) {
 			channels[i].noteCut();
 			polyphony[i].noteIndex = null;
@@ -286,7 +286,7 @@ let app = {
 	//
 	handleMIDIAllNotesOff: function(channel) {
 		let polyphony = app.editorState.polyphony;
-		app.editorState.onKeys.length = 0;
+		app.editorState.onKeys.splice(0, app.editorState.onKeys.length);
 		for(let i = 0; i < channels.length; ++i) {
 			channels[i].noteOff();
 			polyphony[i].noteIndex = null;
