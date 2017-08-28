@@ -7,12 +7,20 @@ let playback = {
 	ticksLeft: 0,
 	playbackStateDidChange: function (from, to){
 		if(to === 'paused'){
-			app.handleMIDIReset();
+			app.handleMIDIAllSoundOff(); // keep effects active, they will be put back in order when playback begins again
 		}
 		else if(from === 'paused'){
-			let song = app.projectState.songs[app.editorState.activeSongIndex];
-			playback.tempo = song.tempo;
-			playback.speed = song.speed;
+			applyColdFX(app.editorState.activeOrderIndex,
+						app.editorState.activeRowIndex,
+						function(channelIndex, fx) {
+							if(fx.type in playback._effectHandlers){
+								playback._effectHandlers[fx.type](fx.value);
+							}
+							if(channelIndex !== null) {
+								channels[channelIndex].processEffect(fx.type,
+																	 fx.value);
+							}
+						});
 		}
 	},
 	processOneFrame: function () {
