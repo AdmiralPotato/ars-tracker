@@ -196,7 +196,8 @@ let filterHexDigitKey = function(event) {
 		return false;
 };
 let applyAutoInstrument = function(instruction,channel) {
-	if(!app.editorState.autoInstrument) return;
+	if(!app.editorState.autoInstrument)
+		return;
 	let index = app.projectState.instruments.indexOf((app.editorState.respectMIDIInstruments && channel) ? channel.instrument : app.editorState.activeInstrument);
 	if(index >= 0) instruction.instrument = index;
 }
@@ -212,6 +213,11 @@ let noteLetterMap = {C:0, D:2, E:4, F:5, G:7, A:9, B:11};
 let octaveDigitMap = {Z:0, 0:12, 1:24, 2:36, 3:48, 4:60, 5:72, 6:84, 7:96, 8:108};
 // this is the highest note whose frequency can actually be inputted into the ET209
 let maximum_voice_note = 114;
+let instruction_has_note_on = function(instruction) {
+	return instruction.note !== null
+		&& instruction.note !== 'cut'
+		&& instruction.note !== 'off';
+}
 // filters return true if they fully handled the keypress
 let keyFilterMap = {
 	'note':function(event){
@@ -219,10 +225,12 @@ let keyFilterMap = {
 			let digit = filterHexDigitKey(event);
 			if(digit !== false) {
 				let instruction = getInstruction();
-				if(instruction.note === null
-				   || instruction.note === 'cut'
-				   || instruction.note === 'off') instruction.note = digit;
-				else instruction.note = ((instruction.note << 4) | digit) & 255;
+				if(instruction_has_note_on(instruction)) {
+					instruction.note = ((instruction.note << 4) | digit) & 255;
+				}
+				else {
+					instruction.note = digit;
+				}
 				applyAutoInstrument(instruction);
 				updateInstruction(instruction);
 				return true;
@@ -231,10 +239,12 @@ let keyFilterMap = {
 				let instruction = getInstruction();
 				applyAutoInstrument(instruction);
 				let instrument;
-				if(instruction.instrument != null)
+				if(instruction.instrument != null) {
 					instrument = app.projectState.instruments[instruction.instrument];
-				else
+				}
+				else {
 					instrument = app.editorState.activeInstrument;
+				}
 				if(instrument != null && instrument.autoperiod) {
 					instruction.note = instrument.autoperiod;
 					updateInstruction(instruction);
@@ -246,35 +256,41 @@ let keyFilterMap = {
 			let uppercase = event.key.toUpperCase();
 			if(uppercase in noteLetterMap) {
 				let instruction = getInstruction();
-				if(instruction.note === null
-				   || instruction.note === 'cut'
-				   || instruction.note === 'off') instruction.note = 60;
+				if(instruction_has_note_on(instruction)) {
+					instruction.note = 60;
+				}
 				applyAutoInstrument(instruction);
 				instruction.note = (instruction.note - instruction.note % 12) + noteLetterMap[uppercase];
-				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
+				if(instruction.note > maximum_voice_note) {
+					instruction.note = maximum_voice_note;
+				}
 				updateInstruction(instruction);
 				return true;
 			}
 			else if(uppercase in octaveDigitMap) {
 				let instruction = getInstruction();
-				if(instruction.note === null
-				   || instruction.note === 'cut'
-				   || instruction.note === 'off') instruction.note = 60;
+				if(!instruction_has_note_on(instruction)) {
+					instruction.note = 60;
+				}
 				applyAutoInstrument(instruction);
 				instruction.note = octaveDigitMap[uppercase] + instruction.note % 12;
-				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
+				if(instruction.note > maximum_voice_note) {
+					instruction.note = maximum_voice_note;
+				}
 				updateInstruction(instruction);
 				autoAdvance();
 				return true;
 			}
 			else if(event.key == "#") {
 				let instruction = getInstruction();
-				if(instruction.note === null
-				   || instruction.note === 'cut'
-				   || instruction.note === 'off') return false;
+				if(!instruction_has_note_on(instruction)) {
+					instruction.note = 60;
+				}
 				applyAutoInstrument(instruction);
 				++instruction.note;
-				if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
+				if(instruction.note > maximum_voice_note) {
+					instruction.note = maximum_voice_note;
+				}
 				updateInstruction(instruction);
 				return true;
 			}
@@ -296,8 +312,12 @@ let keyFilterMap = {
 		let digit = filterHexDigitKey(event);
 		if(digit !== false) {
 			let instruction = getInstruction();
-			if(instruction.instrument === null) instruction.instrument = digit << 4;
-			else instruction.instrument = (instruction.instrument & 0xF) | (digit << 4);
+			if(instruction.instrument === null) {
+				instruction.instrument = digit << 4;
+			}
+			else {
+				instruction.instrument = (instruction.instrument & 0xF) | (digit << 4);
+			}
 			updateInstruction(instruction);
 			return true;
 		}
@@ -306,8 +326,12 @@ let keyFilterMap = {
 		let digit = filterHexDigitKey(event);
 		if(digit !== false) {
 			let instruction = getInstruction();
-			if(instruction.instrument === null) instruction.instrument = digit;
-			else instruction.instrument = (instruction.instrument & 0xF0) | digit;
+			if(instruction.instrument === null) {
+				instruction.instrument = digit;
+			}
+			else {
+				instruction.instrument = (instruction.instrument & 0xF0) | digit;
+			}
 			updateInstruction(instruction);
 			return true;
 		}
@@ -328,9 +352,15 @@ for(let n = 0; n < 3; ++n) {
 		let uppercase = event.key.toUpperCase();
 		if(letter_to_effect_name[uppercase]) {
 			let instruction = getInstruction();
-			if(instruction.fx == null) instruction.fx = [];
-			while(instruction.fx.length < effectIndex) instruction.fx.push(null);
-			if(instruction.fx[effectIndex] == undefined) instruction.fx[effectIndex] = {value:0};
+			if(instruction.fx == null) {
+				instruction.fx = [];
+			}
+			while(instruction.fx.length < effectIndex) {
+				instruction.fx.push(null);
+			}
+			if(instruction.fx[effectIndex] == undefined) {
+				instruction.fx[effectIndex] = {value:0};
+			}
 			instruction.fx[effectIndex].type = letter_to_effect_name[uppercase];
 			updateInstruction(instruction);
 			return true;
@@ -340,7 +370,9 @@ for(let n = 0; n < 3; ++n) {
 		let digit = filterHexDigitKey(event);
 		if(digit !== false) {
 			let instruction = getInstruction();
-			if(instruction.fx == null || instruction.fx[effectIndex] == undefined) return false;
+			if(instruction.fx == null || instruction.fx[effectIndex] == undefined) {
+				return false;
+			}
 			instruction.fx[effectIndex].value = (instruction.fx[effectIndex].value & 0xF) | (digit << 4)
 			updateInstruction(instruction);
 			return true;
@@ -350,7 +382,9 @@ for(let n = 0; n < 3; ++n) {
 		let digit = filterHexDigitKey(event);
 		if(digit !== false) {
 			let instruction = getInstruction();
-			if(instruction.fx == null || instruction.fx[effectIndex] == undefined) return false;
+			if(instruction.fx == null || instruction.fx[effectIndex] == undefined) {
+				return false;
+			}
 			instruction.fx[effectIndex].value = (instruction.fx[effectIndex].value & 0xF0) | digit;
 			updateInstruction(instruction);
 			return true;
@@ -361,13 +395,20 @@ let recordNoteOn = function(noteValue, velocity, channel) {
 	let instruction = getInstruction(channel);
 	applyAutoInstrument(instruction, channels[channel]);
 	instruction.note = noteValue;
-	if(instruction.note > maximum_voice_note) instruction.note = maximum_voice_note;
-	if(app.editorState.respectMIDIVelocities) instruction.volume = (velocity+7)>>3;
+	if(instruction.note > maximum_voice_note) {
+		instruction.note = maximum_voice_note;
+	}
+	if(app.editorState.respectMIDIVelocities) {
+		instruction.volume = (velocity+7)>>3;
+	}
 	updateInstruction(instruction, channel);
-	if(!app.editorState.respectMIDIClocks) autoAdvance();
+	if(!app.editorState.respectMIDIClocks) {
+		autoAdvance();
+	}
 };
 let recordNoteOff = function(channel) {
-	if(app.editorState.noteOffMode == 'ignored') return;
+	if(app.editorState.noteOffMode == 'ignored')
+		return;
 	let instruction = getInstruction(channel);
 	instruction.instrument = null;
 	instruction.note = app.editorState.noteOffMode;
