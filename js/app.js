@@ -404,12 +404,12 @@ app.vue = new Vue({
 				app.editorState.activeRowIndex = 0;
 			}
 		},
-		changePlaybackState: function (playbackState) {
-			if(app.editorState.playbackState != 'paused' && playbackState == 'paused') {
+		changePlaybackState: function (newPlaybackState) {
+			if(app.editorState.playbackState != 'paused' && newPlaybackState == 'paused') {
 				app.editorState.playbackStateOnLastPause = app.editorState.playbackState;
 			}
-			playback.playbackStateDidChange(app.editorState.playbackState, playbackState);
-			this.changeValueByName('playbackState', playbackState);
+			playback.playbackStateDidChange(app.editorState.playbackState, newPlaybackState);
+			this.changeValueByName('playbackState', newPlaybackState);
 		},
 		changeSpeakerSetup: function (speakerSetup) {
 			this.changeValueByName('speakerSetup', speakerSetup);
