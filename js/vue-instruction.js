@@ -56,6 +56,20 @@ Vue.component(
 			fx0: function(){
 				return this.getFxByIndex(0);
 			},
+			instrumentClass: function() {
+				if(!this.instruction || this.instruction.instrument === null) {
+					return "inst_none";
+				}
+				else if(this.instruction.instrument >= app.projectState.instruments.length) {
+					return "inst_bad";
+				}
+				else if((app.projectState.instruments[this.instruction.instrument].type == "noise") != this.isNoise) {
+					return "inst_mismatch";
+				}
+				else {
+					return "inst_ok";
+				}
+			},
 		},
 		methods: {
 			passthrough: function (propertyName, displayForEmpty, converter) {
@@ -76,7 +90,7 @@ Vue.component(
 				<span class="property c3">
 					<table-input :cellName="cellName" :setActive="setActive" name="note"            :value="note"          />
 				</span>
-				<span class="property c2">
+				<span class="property c2" :class="instrumentClass">
 					<table-input :cellName="cellName" :setActive="setActive" name="instrument_high" :value="instrument[0]" />
 					<table-input :cellName="cellName" :setActive="setActive" name="instrument_low"  :value="instrument[1]" />
 				</span>
