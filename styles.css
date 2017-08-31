@@ -80,6 +80,7 @@ h1{
 .instrument-editor,
 .instrument-sequence .svg-holder,
 input[type="text"],
+input[type="number"],
 ul.tab-list,
 button{
 	position: relative;
@@ -234,3 +235,5 @@ ul.tab-list li.buttons button{
 }
 .inst_bad{ color: #f00; }
 .inst_mismatch{ color: #ee0; }
+
+.order-cell{ width:5ch; }

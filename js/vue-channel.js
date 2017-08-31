@@ -22,6 +22,61 @@ let makeNewOrder = function(song, fresh) {
 };
 
 Vue.component(
+	'order-editor-cell',
+	{
+		props: {
+			orders: Array,
+			orderIndex: Number,
+			columnIndex: Number
+		},
+		methods: {
+			updateValue: function(target, hard) {
+				try {
+					if(!target.value.match(/^ *\-?[0-9]+ *$/)) {
+						throw "number format is bad";
+					}
+					let value = parseInt(target.value);
+					if(isNaN(value)) {
+						throw "number format is bad";
+					}
+					else if(value < 0) {
+						value = 0;
+						target.value = "0";
+					}
+					else if(value > 4095) {
+						// there is no way to fit more than 4096 pattern references in the same bank
+						value = 4095;
+						target.value = "4095";
+					}
+					this.orders[this.orderIndex].splice(this.columnIndex, 1, value);
+					if(hard) {
+						target.placeholder = value;
+					}
+				}
+				catch(e) {
+					if(hard) {
+						target.value = this.orders[this.orderIndex][this.columnIndex];
+					}
+				}
+			},
+		},
+		template: `
+			<td>
+			<input
+				class="order-cell"
+				type="number"
+				:value="orders[orderIndex][columnIndex]"
+				:placeholder="orders[orderIndex][columnIndex]"
+				@change="updateValue($event.target, true)"
+				@blur="updateValue($event.target, true)"
+				@input="updateValue($event.target, false)"
+			/>
+			</td>
+		`
+	}
+);
+
+Vue.component(
 	'order-editor',
 	{
 		props: {
@@ -83,8 +138,14 @@ Vue.component(
 							:class="{active: activeOrderIndex === orderIndex}"
 							>
 							<th @click="activateOrder(orderIndex)">order {{formatByte(orderIndex)}}</th>
-							<td v-for="(columnValue, columnIndex) in order">
-								<input type="text" v-model.number="order[columnIndex]" size="2" />
+								<order-editor-cell :orders="orders" :orderIndex="orderIndex" :columnIndex="0" />
+								<order-editor-cell :orders="orders" :orderIndex="orderIndex" :columnIndex="1" />
+								<order-editor-cell :orders="orders" :orderIndex="orderIndex" :columnIndex="2" />
+								<order-editor-cell :orders="orders" :orderIndex="orderIndex" :columnIndex="3" />
+								<order-editor-cell :orders="orders" :orderIndex="orderIndex" :columnIndex="4" />
+								<order-editor-cell :orders="orders" :orderIndex="orderIndex" :columnIndex="5" />
+								<order-editor-cell :orders="orders" :orderIndex="orderIndex" :columnIndex="6" />
+								<order-editor-cell :orders="orders" :orderIndex="orderIndex" :columnIndex="7" />
 							</td>
 						</tr>
 					</tbody>
