@@ -330,7 +330,8 @@ let app = {
 	handleMIDITimingClock: function() {
 		if(!app.editorState.midiClockActive) return;
 		let songSpeed = app.projectState.songs[app.editorState.activeSongIndex].speed;
-		while(++app.editorState.midiClockPhase >= songSpeed) {
+		++app.editorState.midiClockPhase;
+		while(app.editorState.midiClockPhase >= songSpeed) {
 			app.editorState.midiClockPhase -= songSpeed;
 			if(app.editorState.recordMIDI && app.editorState.respectMIDIClocks) {
 				recordAdvance();
