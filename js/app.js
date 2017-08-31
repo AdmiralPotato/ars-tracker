@@ -12,6 +12,21 @@ let getLastValueInArray = function (array) {
 };
 
 let app = {
+	// any key which exists in persistentSettings will be automatically saved and restored, defaulting to the value initially found in editorState
+	persistentSettings: [
+		"volume",
+		"speakerSetup",
+		"autoAdvance",
+		"autoAdvanceOrder",
+		"autoInstrument",
+		"enablePolyphony",
+		"respectMIDIClocks",
+		"respectMIDIChannels",
+		"respectMIDIInstruments",
+		"respectMIDIVelocities",
+		"noteOffMode",
+		"sppMode",
+	],
 	editorState: {
 		projectFileName: 'super_hella_sweet_project.json',
 		volume: 1,
@@ -373,6 +388,51 @@ let app = {
 		}
 	}
 };
+
+
+/* Here is where the persistent settings magic goes. */
+if(localStorage) {
+	let savedSettings = {};
+	try {
+		let storedSettings = localStorage.getItem("ARSTrackerSettings");
+		if(storedSettings) {
+			savedSettings = JSON.parse(storedSettings);
+		}
+	}
+	catch(e) {
+		console.warn("Unable to restore saved settings, reverting to defaults", e);
+	}
+	let saveSettings = function() {
+		localStorage.setItem("ARSTrackerSettings", JSON.stringify(savedSettings));
+		console.log(localStorage.getItem("ARSTrackerSettings"));
+	};
+	// Why can't I just put these in the prototype?
+	let getPP = function() {
+		return this.hiddenValue;
+	};
+	let setPP = function(newValue) {
+		if(newValue !== this.hiddenValue) {
+			this.hiddenValue = newValue;
+			savedSettings[this.settingName] = newValue;
+			saveSettings();
+		}
+	};
+	let PersistentProperty = function(settingName) {
+		this.settingName = settingName;
+		("assert" in console) && console.assert(settingName in app.editorState);
+		let defaultValue = app.editorState[settingName];
+		this.hiddenValue = (settingName in savedSettings) ? savedSettings[settingName] : defaultValue;
+		this.get = getPP.bind(this);
+		this.set = setPP.bind(this);
+	};
+	PersistentProperty.prototype = {
+		configurable: true,
+		enumerable: true,
+	};
+	app.persistentSettings.forEach(function(settingName) {
+		Object.defineProperty(app.editorState, settingName, new PersistentProperty(settingName));
+	});
+}
 
 app.startAudio();
 
