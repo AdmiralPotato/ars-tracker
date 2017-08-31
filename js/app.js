@@ -404,7 +404,6 @@ if(localStorage) {
 	}
 	let saveSettings = function() {
 		localStorage.setItem("ARSTrackerSettings", JSON.stringify(savedSettings));
-		console.log(localStorage.getItem("ARSTrackerSettings"));
 	};
 	// Why can't I just put these in the prototype?
 	let getPP = function() {
@@ -459,7 +458,6 @@ app.vue = new Vue({
 			app.editorState.activeInstrument = app.projectState.instruments[instrumentIndex];
 		},
 		activateOrder: function (orderIndex) {
-			console.log('activate order', orderIndex);
 			app.editorState.activeOrderIndex = orderIndex;
 			if(app.editorState.playbackState !== 'paused'){
 				app.editorState.activeRowIndex = 0;
@@ -476,7 +474,6 @@ app.vue = new Vue({
 			this.changeValueByName('speakerSetup', speakerSetup);
 		},
 		changeValueByName: function (name, value) {
-			console.log('change ' + name, value);
 			app.editorState[name] = value;
 		}
 	},

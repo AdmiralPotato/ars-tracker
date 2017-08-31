@@ -133,7 +133,7 @@
 		if(unhandledMessageType == null) {
 			unhandledMessageType = evt.data[0].toString(16).toUpperCase()+"H (undefined)";
 		}
-		console.log("Unhandled MIDI message: "+unhandledMessageType, evt.data);
+		console.warn("Unhandled MIDI message: "+unhandledMessageType, evt.data);
 	};
 	let switchPort = function(target) {
 		if(inport == target) return;
@@ -144,7 +144,7 @@
 		inport = target;
 		if(inport) {
 			inport.onmidimessage = handleMIDIMessage;
-			console.log("Selected MIDI input: "+inport.name);
+			console.info("Selected MIDI input: "+inport.name);
 		}
 	}
 	let midiSelectDidChange = function() {
@@ -183,13 +183,13 @@
 				midiBox.style.display = 'block';
 			},
 			function(whynot) {
-				console.error("Could not get MIDI access: "+whynot);
+				console.error("Could not get MIDI access", whynot);
 				midiBox.remove();
 			}
 		);
 	}
 	else {
-		console.log("Browser does not support MIDI access.");
+		console.warn("Your browser does not support Web MIDI. MIDI input will not be available.");
 		midiBox.remove();
 	}
 }

@@ -203,7 +203,6 @@ Vue.component(
 			},
 			on: function (event) {
 				if(this.holding || event.type === 'mousedown' ) {
-					console.log(this.serialize() + ' on');
 					this.active = true;
 					if(this.onHandler){
 						this.onHandler(this.absoluteIndex);
@@ -212,7 +211,6 @@ Vue.component(
 			},
 			off: function () {
 				if(this.holding){
-					console.log(this.serialize() + ' off');
 					this.active = false;
 					if(this.offHandler){
 						this.offHandler(this.absoluteIndex);
