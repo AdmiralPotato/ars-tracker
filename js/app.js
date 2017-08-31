@@ -1,14 +1,14 @@
 "use strict";
 
 let arrayRemove = function(array, item){
-	let index = array.indexOf(item);
-	if(index !== -1){
+	let index;
+	while((index = array.indexOf(item)) != -1) {
 		array.splice(index, 1);
 	}
 	return array;
 };
 let getLastValueInArray = function (array) {
-	return array[array.length -1];
+	return array[array.length - 1];
 };
 
 let app = {
