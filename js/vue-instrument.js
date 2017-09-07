@@ -4,7 +4,7 @@ Vue.component(
 	'instrument-list',
 	{
 		props: {
-			activeInstrument: Instrument,
+			activeInstrumentIndex: Number,
 			change: Function,
 			instruments: Array
 		},
@@ -22,7 +22,7 @@ Vue.component(
 					<li v-for="(item, index) in instruments">
 						<button
 							@click="change(index)"
-							:class="{active: item === activeInstrument}"
+							:class="{active: index === activeInstrumentIndex}"
 						>{{index}}:{{item.name}}</button>
 					</li>
 				</ul>
@@ -39,7 +39,7 @@ Vue.component(
 	'instrument-editor',
 	{
 		props: {
-			activeInstrument: Instrument
+			activeInstrumentIndex: Number
 		},
 		data: function () {
 			return {
@@ -53,15 +53,23 @@ Vue.component(
 		beforeUpdate: function () {
 			this.activeSequence = this.activeInstrument[this.activeSequenceDescription.name];
 		},
+		computed: {
+			activeInstrument: function(){
+				return app.projectState.instruments[this.activeInstrumentIndex];
+			}
+		},
 		methods: {
 			changeTab: function(sequenceDescription){
 				this.activeSequenceDescription = sequenceDescription;
 				this.activeSequence = this.activeInstrument[this.activeSequenceDescription.name];
+			},
+			noSubmit: function(submitEvent){
+				submitEvent.preventDefault();
 			}
 		},
 		template: `
 			<div class="instrument-editor">
-				<form>
+				<form @submit="noSubmit">
 					<input type="text" size="60" v-model="activeInstrument.name" />
 				</form>
 				<ul class="tab-list noSelect">

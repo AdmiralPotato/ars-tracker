@@ -31,6 +31,7 @@ let app = {
 		projectFileName: 'super_hella_sweet_project.json',
 		volume: 1,
 		onKeys: [],
+		activeInstrumentIndex: 0,
 		activeInstrument: new Instrument(), // TODO: make this default to null
 		polyphonyChannels: [0, 1, 2, 3, 4, 5, 6], // TODO: expose this array
 		polyphony: [{}, {}, {}, {}, {}, {}, {}, {}],
@@ -455,6 +456,7 @@ app.vue = new Vue({
 			app.handleMIDINoteOff(index, 127, 16);
 		},
 		changeInstrument: function (instrumentIndex) {
+			app.editorState.activeInstrumentIndex = instrumentIndex;
 			app.editorState.activeInstrument = app.projectState.instruments[instrumentIndex];
 		},
 		activateOrder: function (orderIndex) {
@@ -491,8 +493,19 @@ app.vue = new Vue({
 				:changeSpeakerSetup="changeSpeakerSetup"
 				/>
 			<collapse :openByDefault="false" name="oscilloscope"><vue-oscilloscope :analyser="audio.analyser" /></collapse>
-			<collapse :openByDefault="false" name="instrument list / editor"><instrument-list :activeInstrument="editorState.activeInstrument" :instruments="projectState.instruments" :change="changeInstrument" /></collapse>
-			<collapse :openByDefault="false" name="instrument editor"><instrument-editor :activeInstrument="editorState.activeInstrument" :key="editorState.activeInstrument.name" /></collapse>
+			<collapse :openByDefault="false" name="instrument list / editor">
+				<instrument-list
+					:activeInstrumentIndex="editorState.activeInstrumentIndex"
+					:instruments="projectState.instruments"
+					:change="changeInstrument"
+					/>
+			</collapse>
+			<collapse :openByDefault="false" name="instrument editor">
+				<instrument-editor
+					:activeInstrumentIndex="editorState.activeInstrumentIndex"
+					:key="editorState.activeInstrumentIndex"
+					/>
+			</collapse>
 			<collapse :openByDefault="false" name="keyboard"><keyboard :octaves="5" :onHandler="on" :offHandler="off" :onKeys="editorState.onKeys" /></collapse>
 			<collapse :openByDefault="true" name="order editor">
 				<order-editor
