@@ -89,27 +89,30 @@ Vue.component(
 					});
 				});
 				return orders;
+			},
+			activeSong: function () {
+				return app.projectState.songs[app.editorState.activeSongIndex];
 			}
 		},
 		methods: {
 			formatByte: formatByte,
 			insertOrderBefore: function(fresh) {
-				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+				let activeSong = this.activeSong;
 				activeSong.orders.splice(app.editorState.activeOrderIndex, 0, makeNewOrder(activeSong, fresh));
 				++app.editorState.activeOrderIndex;
 			},
 			duplicateOrder: function() {
-				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+				let activeSong = this.activeSong;
 				activeSong.orders.splice(app.editorState.activeOrderIndex, 0, activeSong.orders[app.editorState.activeOrderIndex].slice());
 				++app.editorState.activeOrderIndex;
 			},
 			insertOrderAfter: function(fresh) {
-				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+				let activeSong = this.activeSong;
 				activeSong.orders.splice(app.editorState.activeOrderIndex+1, 0, makeNewOrder(activeSong, fresh));
 				++app.editorState.activeOrderIndex;
 			},
 			deleteOrder: function() {
-				let activeSong = app.projectState.songs[app.editorState.activeSongIndex];
+				let activeSong = this.activeSong;
 				activeSong.orders.splice(app.editorState.activeOrderIndex, 1);
 				if(app.editorState.activeOrderIndex >= activeSong.orders.length) {
 					--app.editorState.activeOrderIndex;
