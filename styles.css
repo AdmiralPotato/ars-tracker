@@ -218,7 +218,7 @@ ul.tab-list li.buttons button{
 .instruction-editor .property{
 	border-right: 1px solid #333;
 	text-align: center;
-	white-space: no-wrap;
+	white-space: nowrap;
 	display: flex;
 }
 .instruction-editor .property:last-of-type{
