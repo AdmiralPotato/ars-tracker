@@ -16,7 +16,9 @@ let applyColdFX;
 	let resetAll = function(song, handleEffect) {
 		handleEffect(null, {type:"speed",value:song.speed});
 		handleEffect(null, {type:"tempo",value:song.tempo});
-		channels.forEach(function(channel) { channel.forgetFX(); });
+		for(let n = 0; n < channels.length; ++n) {
+			handleEffect(n, {type:"reset_channel"});
+		}
 	};
 	applyColdFX = function(targetOrderIndex, targetRowIndex, handleEffect) {
 		let song = app.projectState.songs[app.editorState.activeSongIndex];
@@ -53,6 +55,9 @@ let applyColdFX;
 			// after this point, orderIndex or rowIndex can change
 			for(let channelIndex = 0; channelIndex < channels.length; ++channelIndex) {
 				let instruction = song.patterns[channelIndex][curOrder[channelIndex]][curRowIndex];
+				if(instruction && instruction.instrument !== null) {
+					handleEffect(channelIndex, {type:"set_instrument", value:instruction.instrument});
+				}
 				if(instruction && instruction.fx) {
 					instruction.fx.forEach(function(fx) {
 						if(!fx) return;

@@ -80,6 +80,16 @@ Channel.prototype = {
 		hwslide: function(param) {
 			this.hwslideBits = (param<<14)&0xC000;
 		},
+		// internal, used by coldFX
+		reset_channel: function(param) {
+			this.forgetFX();
+			this.setActiveInstrument(app.projectState.instruments[0]);
+		},
+		set_instrument: function(param) {
+			if(param >= 0 && param < app.projectState.instruments.length) {
+				this.setActiveInstrument(app.projectState.instruments[param]);
+			}
+		},
 	},
 	setIsMuted: function(isMuted) {
 		this.isMuted = isMuted;
