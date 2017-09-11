@@ -194,7 +194,7 @@ let app = {
 			   || channels[channelIndex].instrument == null)
 				channels[channelIndex].setActiveInstrument(instrument);
 			if(app.editorState.respectMIDIVelocities) {
-				channels[channelIndex].setVolume((velocity+7)>>3);
+				channels[channelIndex].setVolume(velocity>>3);
 			}
 			channels[channelIndex].noteOn(note);
 			if(app.editorState.recordMIDI) {
