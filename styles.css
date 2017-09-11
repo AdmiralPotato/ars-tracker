@@ -79,6 +79,8 @@ h1{
 .instrument-list,
 .instrument-editor,
 .instrument-sequence .svg-holder,
+select,
+input[type="file"],
 input[type="text"],
 input[type="number"],
 ul.tab-list,
@@ -133,6 +135,7 @@ td{
 	color: #0f0;
 }
 table input,
+table select,
 table button{
 	margin: 0;
 }
@@ -185,9 +188,13 @@ ul.tab-list li{
 	border-right: 1px solid #333;
 }
 
-ul.tab-list li input{
+ul.tab-list li input,
+ul.tab-list li select{
 	display: block;
 	width: 100%;
+}
+ul.tab-list li input[type="file"]{
+	width: 14rem;
 }
 ul.tab-list li.buttons{
 	display: flex;

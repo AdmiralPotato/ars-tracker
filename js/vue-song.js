@@ -4,28 +4,54 @@ Vue.component(
 	'song',
 	{
 		props: {
-			song: Object,
 			editorState: Object,
-			changePlaybackState: Function,
-			changeSpeakerSetup: Function
+			projectState: Object,
+			changePlaybackState: Function
 		},
-		data: function () {
-			return {
-				playbackStates: {
-					'paused': '⏸&#xFE0E;',
-					'playSong': '⏵&#xFE0E;',
-					'loopOrder': '🔂&#xFE0E;'
-				},
-				speakerSetups: {
-					'mono': '📻&#xFE0E;',
-					'stereo': '🔊&#xFE0E;',
-					'headphones': '🎧&#xFE0E;'
+		computed: {
+			song: function(){return this.projectState.songs[this.editorState.activeSongIndex];}
+		},
+		methods: {
+			changeSong: function () {
+				this.changePlaybackState('paused');
+				this.editorState.activeOrderIndex = 0;
+				this.editorState.activeRowIndex = 0;
+			},
+			newSong: function () {
+				let emptySong = app.createEmptySong();
+				this.editorState.activeSongIndex = this.projectState.songs.push(emptySong) - 1;
+				this.changeSong();
+			},
+			deleteSong: function () {
+				this.projectState.songs.splice(this.editorState.activeSongIndex, 1);
+				this.editorState.activeSongIndex = Math.max(0, this.projectState.songs.length - 1);
+				if(!this.projectState.songs.length){
+					this.newSong();
+				} else {
+					this.changeSong();
 				}
-			};
+			}
 		},
 		template: `
 			<div class="song">
 				<ul class="tab-list">
+					<li>
+						<label for="activeSong">Song list:</label>
+						<select id="activeSong"
+							v-model="editorState.activeSongIndex"
+							@change="changeSong"
+						>
+							<option
+								v-for="(item, index) in projectState.songs"
+								:value="index"
+								:key="index"
+							>{{item.metadata.title}}</option>
+						</select>
+					</li>
+					<li>
+						<button @click="newSong">New Song</button>
+						<button @click="deleteSong">Delete Song</button>
+					</li>
 					<li>
 						<label for="songTitle">Song title:</label>
 						<input id="songTitle" size="20" type="text" v-model="song.metadata.title" />
@@ -41,30 +67,6 @@ Vue.component(
 					<li>
 						<label for="songRows">Song rows:</label>
 						<input id="songRows" size="4" type="text" v-model.number="song.rows" />
-					</li>
-					<li class="noSelect buttons">
-						<button
-							v-for="(symbol, name) in playbackStates"
-							@click="changePlaybackState(name)"
-							:title="editorState.playbackState"
-							:class="{active: name === editorState.playbackState}"
-						>
-							<span v-html="symbol"></span>
-						</button>
-					</li>
-					<li class="noSelect buttons">
-						<button
-							v-for="(symbol, name) in speakerSetups"
-							@click="changeSpeakerSetup(name)"
-							:class="{active: name === editorState.speakerSetup}"
-						>
-							<span v-html="symbol"></span>
-							<span>{{name}}</span>
-						</button>
-					</li>
-					<li>
-						<label for="editorVolume">Editor volume: {{editorState.volume}}</label>
-						<input id="editorVolume" type="range" min="0" max="4" step="0.1" v-model="editorState.volume">
 					</li>
 				</ul>
 			</div>

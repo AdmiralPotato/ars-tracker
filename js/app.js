@@ -2,13 +2,25 @@
 
 let arrayRemove = function(array, item){
 	let index;
-	while((index = array.indexOf(item)) != -1) {
+	while((index = array.indexOf(item)) !== -1) {
 		array.splice(index, 1);
 	}
 	return array;
 };
 let getLastValueInArray = function (array) {
 	return array[array.length - 1];
+};
+
+let songIndex = 0;
+let createEmptySong = function(){
+	return {
+		metadata: {title: 'Untitled ' + songIndex++},
+		orders: [[0,0,0,0,0,0,0,0]],
+		speed: 6,
+		tempo: 150,
+		rows: 64,
+		patterns: [[[]],[[]],[[]],[[]],[[]],[[]],[[]],[[]]]
+	}
 };
 
 let app = {
@@ -61,15 +73,9 @@ let app = {
 		instruments: [
 			new Instrument() // TODO: handle zero instruments
 		],
-		songs: [{
-			metadata: {title: 'Untitled'},
-			orders: [[0,0,0,0,0,0,0,0]],
-			speed: 6,
-			tempo: 150,
-			rows: 64,
-			patterns: [[[]],[[]],[[]],[[]],[[]],[[]],[[]],[[]]]
-		}]
+		songs: [createEmptySong()]
 	},
+	createEmptySong: createEmptySong,
 	cookChannelIndex: function (rawChannel) {
 		if(app.editorState.respectMIDIChannels) {
 			if(rawChannel >= 8) rawChannel = app.editorState.activeChannelIndex;
@@ -485,12 +491,13 @@ app.vue = new Vue({
 			<io
 				:editorState="editorState"
 				:projectState="projectState"
-				/>
-			<song
-				:song="projectState.songs[editorState.activeSongIndex]"
-				:editorState="editorState"
 				:changePlaybackState="changePlaybackState"
 				:changeSpeakerSetup="changeSpeakerSetup"
+				/>
+			<song
+				:editorState="editorState"
+				:projectState="projectState"
+				:changePlaybackState="changePlaybackState"
 				/>
 			<collapse :openByDefault="false" name="oscilloscope"><vue-oscilloscope :analyser="audio.analyser" /></collapse>
 			<collapse :openByDefault="false" name="instrument list / editor">

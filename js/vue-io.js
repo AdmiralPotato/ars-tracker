@@ -4,8 +4,24 @@ Vue.component(
 	'io',
 	{
 		props: {
+			projectState: Object,
 			editorState: Object,
-			projectState: Object
+			changePlaybackState: Function,
+			changeSpeakerSetup: Function
+		},
+		data: function () {
+			return {
+				playbackStates: {
+					'paused': '⏸&#xFE0E;',
+					'playSong': '⏵&#xFE0E;',
+					'loopOrder': '🔂&#xFE0E;'
+				},
+				speakerSetups: {
+					'mono': '📻&#xFE0E;',
+					'stereo': '🔊&#xFE0E;',
+					'headphones': '🎧&#xFE0E;'
+				}
+			};
 		},
 		created: function(){
 			this.saveListener = function(keydownEvent){
@@ -50,7 +66,7 @@ Vue.component(
 			}
 		},
 		template: `
-			<div class="io song">
+			<div class="io">
 				<ul class="tab-list">
 					<li>
 						<label for="openExistingProject">Open Existing Project:</label>
@@ -58,7 +74,31 @@ Vue.component(
 					</li>
 					<li>
 						<label for="projectFileName">Project file name:</label>
-						<input id="projectFileName" size="40" type="text" v-model="editorState.projectFileName" />
+						<input id="projectFileName" size="30" type="text" v-model="editorState.projectFileName" />
+					</li>
+					<li class="noSelect buttons">
+						<button
+							v-for="(symbol, name) in playbackStates"
+							@click="changePlaybackState(name)"
+							:title="editorState.playbackState"
+							:class="{active: name === editorState.playbackState}"
+						>
+							<span v-html="symbol"></span>
+						</button>
+					</li>
+					<li class="noSelect buttons">
+						<button
+							v-for="(symbol, name) in speakerSetups"
+							@click="changeSpeakerSetup(name)"
+							:class="{active: name === editorState.speakerSetup}"
+						>
+							<span v-html="symbol"></span>
+							<span>{{name}}</span>
+						</button>
+					</li>
+					<li>
+						<label for="editorVolume">Editor volume: {{editorState.volume}}</label>
+						<input id="editorVolume" type="range" min="0" max="4" step="0.1" v-model="editorState.volume">
 					</li>
 				</ul>
 			</div>
