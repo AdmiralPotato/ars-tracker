@@ -179,6 +179,22 @@ let app = {
 	repeatFilter: function (key, value) {
 		return key === 'repeat' ? undefined : value;
 	},
+	// Edits every note on which is definitely associated with a given instrument to have the given note number
+	autoChangeNoisePeriods: function(instrumentIndex, note) {
+		app.projectState.songs.forEach(function(song) {
+			song.patterns[7].forEach(function(pattern) {
+				pattern.forEach(function(instruction) {
+					if(instruction
+					   && instruction.instrument === instrumentIndex
+					   && instruction.note !== null
+					   && instruction.note !== 'cut'
+					   && instruction.note !== 'off') {
+						instruction.note = note;
+					}
+				});
+			});
+		});
+	},
 	////// MIDI handling
 	//
 	// Handle a Note On message.

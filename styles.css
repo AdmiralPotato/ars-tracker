@@ -242,5 +242,5 @@ ul.tab-list li.buttons button{
 }
 .inst_bad{ color: #f00; }
 .inst_mismatch{ color: #ee0; }
-
 .order-cell{ width:5ch; }
+option { color: initial; }
