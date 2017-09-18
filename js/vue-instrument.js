@@ -255,7 +255,7 @@ Vue.component(
 				],
 				pans: [
 					{value:0x80, name:"Pan Left"},
-					{value:0x00, name:"Pan Center"},
+					{value:0x00, name:"Pan Neutral"},
 					{value:0x40, name:"Pan Right"},
 					{value:0xC0, name:"Boost"},
 				],
