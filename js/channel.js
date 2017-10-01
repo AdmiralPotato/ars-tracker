@@ -109,9 +109,6 @@ Channel.prototype = {
 				channel.valueMap[sequenceName] = sequence.valueAt(sequenceIndex);
 			}
 		});
-		if(!channel.noteHeld && channel.phaseMap.volume === null) {
-			channel.valueMap.volume = 0;
-		}
 	},
 	resetSequences: function () {
 		let channel = this;
