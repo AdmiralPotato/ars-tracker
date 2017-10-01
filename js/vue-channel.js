@@ -137,7 +137,7 @@ let keyFilterMap = {
 			let uppercase = event.key.toUpperCase();
 			if(uppercase in noteLetterMap) {
 				let instruction = getInstruction();
-				if(instruction_has_note_on(instruction)) {
+				if(!instruction_has_note_on(instruction)) {
 					instruction.note = 60;
 				}
 				applyAutoInstrument(instruction);
