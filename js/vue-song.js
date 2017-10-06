@@ -57,6 +57,10 @@ Vue.component(
 						<input id="songTitle" size="20" type="text" v-model="song.metadata.title" />
 					</li>
 					<li>
+						<label for="songArtist">Song artist:</label>
+						<input id="songArtist" size="16" type="text" v-model="song.metadata.artist" />
+					</li>
+					<li>
 						<label for="songSpeed">Song speed:</label>
 						<input id="songSpeed" size="4" type="text" v-model.number="song.speed" />
 					</li>
