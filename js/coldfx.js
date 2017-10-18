@@ -58,6 +58,9 @@ let applyColdFX;
 				if(instruction && instruction.instrument !== null) {
 					handleEffect(channelIndex, {type:"set_instrument", value:instruction.instrument});
 				}
+				if(instruction && instruction.volume !== null) {
+					handleEffect(channelIndex, {type:"set_volume", value:instruction.volume});
+				}
 				if(instruction && instruction.fx) {
 					instruction.fx.forEach(function(fx) {
 						if(!fx) return;

@@ -90,6 +90,9 @@ Channel.prototype = {
 				this.setActiveInstrument(app.projectState.instruments[param]);
 			}
 		},
+		set_volume: function(param) {
+			this.volume = param & 15;
+		},
 	},
 	setIsMuted: function(isMuted) {
 		this.isMuted = isMuted;
